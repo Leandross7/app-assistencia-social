@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Atendimentos - Assistência Social</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#16A34A">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; background-image: linear-gradient(180deg, #f0f4f8 0%, #d9e2ec 100%); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e0e7ff; }
+        ::-webkit-scrollbar-thumb { background: #a5b4fc; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #818cf8; }
+        .fade-in { animation: fadeInAnimation 0.5s ease-in-out forwards; }
+        @keyframes fadeInAnimation { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #16a34a; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="app-content" class="container mx-auto p-4 md:p-8 max-w-5xl hidden">
+        <header class="text-center mb-10 fade-in">
+            <div class="flex justify-center items-center mb-4">
+                <svg class="h-12 w-12 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+                </svg>
+                <span class="text-2xl font-bold text-gray-700 ml-3">SUAS App</span>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-green-700">Sistema de Registro de Atendimentos</h1>
+            <p class="text-gray-500 mt-2">Plataforma moderna para gestão de dados da Assistência Social.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.1s;">
+                <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Novo Atendimento</h2>
+                <form id="form-atendimento" class="space-y-4">
+                    <div>
+                        <label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família ou Indivíduo</label>
+                        <input type="text" id="nomeFamilia" name="nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data do Atendimento</label>
+                        <input type="date" id="dataAtendimento" name="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label>
+                        <select id="tipoServico" name="tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                            <option value="">Selecione...</option>
+                            <option value="Acompanhamento Familiar">Acompanhamento Familiar</option>
+                            <option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option>
+                            <option value="Orientação Jurídica">Orientação Jurídica</option>
+                            <option value="Apoio Psicológico">Apoio Psicológico</option>
+                            <option value="Cadastro Único">Cadastro Único</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="observacoes" class="block text-sm font-medium text-gray-600">Observações</label>
+                        <textarea id="observacoes" name="observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 shadow-md hover:shadow-lg">
+                        Salvar Atendimento
+                    </button>
+                </form>
+            </div>
+
+            <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.2s;">
+                <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Histórico de Atendimentos</h2>
+                <div id="lista-atendimentos" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <!-- Atendimentos serão inseridos aqui -->
+                </div>
+            </div>
+        </main>
+        
+        <footer class="text-center mt-10 text-xs text-gray-500">
+            <p>ID de Sessão: <span id="session-id" class="font-mono">N/A</span></p>
+        </footer>
+    </div>
+
+    <div id="loading-screen" class="flex justify-center items-center h-screen">
+        <div>
+            <div class="loader"></div>
+            <p class="text-center text-gray-600">Conectando ao banco de dados...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+  apiKey: "AIzaSyA23XFm_O2ZUJQU_BePuSYwBqv-2tEol08",
+  authDomain: "sra-suas.firebaseapp.com",
+  projectId: "sra-suas",
+  storageBucket: "sra-suas.firebasestorage.app",
+  messagingSenderId: "822160886742",
+  appId: "1:822160886742:web:f7a4400e8e11e1fbabb277",
+  measurementId: "G-5X706VZFZG"
+};
+
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId;
+        
+        let currentUserId = null;
+        let unsubscribe = null;
+
+        const form = document.getElementById('form-atendimento');
+        const listaAtendimentos = document.getElementById('lista-atendimentos');
+        const dataAtendimentoInput = document.getElementById('dataAtendimento');
+        const loadingScreen = document.getElementById('loading-screen');
+        const appContent = document.getElementById('app-content');
+        const sessionIdSpan = document.getElementById('session-id');
+
+        const renderAtendimentos = (atendimentos) => {
+            listaAtendimentos.innerHTML = '';
+            if (atendimentos.length === 0) {
+                listaAtendimentos.innerHTML = `<div class="text-center text-gray-500 p-8 border-2 border-dashed rounded-lg">Nenhum atendimento registrado ainda.</div>`;
+                return;
+            }
+
+            atendimentos.forEach((atendimento, index) => {
+                const data = atendimento.dataAtendimento.toDate();
+                const dataFormatada = data.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+                const div = document.createElement('div');
+                div.className = 'p-4 border rounded-xl shadow-sm bg-gray-50 hover:bg-indigo-50 transition-all duration-300 hover:shadow-md fade-in';
+                div.style.animationDelay = `${index * 0.05}s`;
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-lg text-green-800">${atendimento.nomeFamilia}</p>
+                            <p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Serviço:</span> ${atendimento.tipoServico}</p>
+                            <p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Data:</span> ${dataFormatada}</p>
+                        </div>
+                        <button data-id="${atendimento.id}" class="btn-excluir text-red-400 hover:text-red-600 font-bold p-1 rounded-full transition-colors">&times;</button>
+                    </div>
+                    ${atendimento.observacoes ? `<p class="mt-3 pt-3 border-t border-gray-200 text-gray-700 whitespace-pre-wrap">${atendimento.observacoes}</p>` : ''}
+                `;
+                listaAtendimentos.appendChild(div);
+            });
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                sessionIdSpan.textContent = currentUserId; // Mostra o ID na tela
+                
+                if (unsubscribe) unsubscribe();
+
+                const atendimentosCollection = collection(db, `artifacts/${appId}/users/${currentUserId}/atendimentos`);
+                const q = query(atendimentosCollection, orderBy("dataAtendimento", "desc"));
+                
+                unsubscribe = onSnapshot(q, (snapshot) => {
+                    const atendimentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderAtendimentos(atendimentos);
+                });
+
+                loadingScreen.classList.add('hidden');
+                appContent.classList.remove('hidden');
+            } else {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Erro ao fazer login:", error);
+                    loadingScreen.innerHTML = `<p class="text-red-500">Falha ao conectar. Verifique sua configuração do Firebase e as regras de segurança.</p>`;
+                }
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUserId) return;
+            const btn = e.submitter;
+            btn.disabled = true;
+            btn.textContent = "Salvando...";
+
+            const novoAtendimento = {
+                nomeFamilia: form.nomeFamilia.value,
+                dataAtendimento: new Date(form.dataAtendimento.value + 'T00:00:00-03:00'),
+                tipoServico: form.tipoServico.value,
+                observacoes: form.observacoes.value,
+                criadoEm: serverTimestamp()
+            };
+
+            try {
+                const atendimentosCollection = collection(db, `artifacts/${appId}/users/${currentUserId}/atendimentos`);
+                await addDoc(atendimentosCollection, novoAtendimento);
+                form.reset();
+                dataAtendimentoInput.valueAsDate = new Date();
+            } catch (error) {
+                console.error("Erro ao salvar atendimento: ", error);
+                alert("Ocorreu um erro ao salvar. Tente novamente.");
+            } finally {
+                 btn.disabled = false;
+                 btn.textContent = "Salvar Atendimento";
+            }
+        });
+
+        listaAtendimentos.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('btn-excluir')) {
+                const idParaExcluir = e.target.getAttribute('data-id');
+                // Substitui o confirm() por uma lógica de UI não bloqueante no futuro
+                if (window.confirm('Tem certeza que deseja excluir este atendimento?')) {
+                    try {
+                        const docRef = doc(db, `artifacts/${appId}/users/${currentUserId}/atendimentos`, idParaExcluir);
+                        await deleteDoc(docRef);
+                    } catch (error) {
+                        console.error("Erro ao excluir atendimento: ", error);
+                        alert("Ocorreu um erro ao excluir. Tente novamente.");
+                    }
+                }
+            }
+        });
+
+        dataAtendimentoInput.valueAsDate = new Date();
+    </script>
+</body>
+</html>

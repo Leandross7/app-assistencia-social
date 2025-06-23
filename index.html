@@ -3,78 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Atendimentos - Assistência Social</title>
+    <title>SUAS App - Gestão de Atendimentos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Biblioteca de Gráficos Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#16A34A">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; background-image: linear-gradient(180deg, #f0f4f8 0%, #d9e2ec 100%); }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #e0e7ff; }
-        ::-webkit-scrollbar-thumb { background: #a5b4fc; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #818cf8; }
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
         .fade-in { animation: fadeInAnimation 0.5s ease-in-out forwards; }
         @keyframes fadeInAnimation { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #16a34a; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .nav-button { transition: all 0.3s ease; }
+        .nav-button.active { background-color: #16A34A; color: white; }
+        .nav-button:not(.active) { background-color: white; color: #374151; }
     </style>
 </head>
 <body class="text-gray-800">
 
-    <div id="app-content" class="container mx-auto p-4 md:p-8 max-w-5xl hidden">
-        <header class="text-center mb-10 fade-in">
-            <div class="flex justify-center items-center mb-4">
-                <svg class="h-12 w-12 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
-                </svg>
-                <span class="text-2xl font-bold text-gray-700 ml-3">SUAS App</span>
+    <!-- Tela de Carregamento Inicial -->
+    <div id="loading-screen" class="flex justify-center items-center h-screen">
+        <div>
+            <div class="loader"></div>
+            <p class="text-center text-gray-600">Conectando ao banco de dados...</p>
+        </div>
+    </div>
+    
+    <!-- Conteúdo Principal do App (inicialmente oculto) -->
+    <div id="app-container" class="hidden">
+        <header class="bg-white shadow-md sticky top-0 z-10">
+            <div class="container mx-auto px-4 py-3">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+                        </svg>
+                        <span class="text-xl font-bold text-gray-700">SUAS App</span>
+                    </div>
+                    <!-- Navegação Principal -->
+                    <nav class="flex gap-2 bg-gray-200 p-1 rounded-lg">
+                        <button id="nav-registro" class="nav-button active px-4 py-1.5 text-sm font-semibold rounded-md">Registro</button>
+                        <button id="nav-dashboard" class="nav-button px-4 py-1.5 text-sm font-semibold rounded-md">Dashboard</button>
+                    </nav>
+                </div>
             </div>
-            <h1 class="text-3xl md:text-4xl font-bold text-green-700">Sistema de Registro de Atendimentos</h1>
-            <p class="text-gray-500 mt-2">Plataforma moderna para gestão de dados da Assistência Social.</p>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.1s;">
-                <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Novo Atendimento</h2>
-                <form id="form-atendimento" class="space-y-4">
-                    <div>
-                        <label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família ou Indivíduo</label>
-                        <input type="text" id="nomeFamilia" name="nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+        <main id="app-content" class="container mx-auto p-4 md:p-8">
+            <!-- PÁGINA DE REGISTRO -->
+            <div id="page-registro" class="fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Novo Atendimento</h2>
+                        <form id="form-atendimento" class="space-y-4">
+                            <!-- Campos do formulário permanecem os mesmos -->
+                            <div><label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input type="text" id="nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
+                            <div><label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input type="date" id="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
+                            <div><label for="tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select id="tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"><option value="">Selecione...</option><option value="Acompanhamento Familiar">Acompanhamento Familiar</option><option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option><option value="Orientação Jurídica">Orientação Jurídica</option><option value="Apoio Psicológico">Apoio Psicológico</option><option value="Cadastro Único">Cadastro Único</option><option value="Outro">Outro</option></select></div>
+                            <div><label for="observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea id="observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></textarea></div>
+                            <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-md hover:shadow-lg">Salvar Atendimento</button>
+                        </form>
                     </div>
-                    <div>
-                        <label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data do Atendimento</label>
-                        <input type="date" id="dataAtendimento" name="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                    <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Histórico de Atendimentos</h2>
+                        <div id="lista-atendimentos" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"></div>
                     </div>
-                    <div>
-                        <label for="tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label>
-                        <select id="tipoServico" name="tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
-                            <option value="">Selecione...</option>
-                            <option value="Acompanhamento Familiar">Acompanhamento Familiar</option>
-                            <option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option>
-                            <option value="Orientação Jurídica">Orientação Jurídica</option>
-                            <option value="Apoio Psicológico">Apoio Psicológico</option>
-                            <option value="Cadastro Único">Cadastro Único</option>
-                            <option value="Outro">Outro</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="observacoes" class="block text-sm font-medium text-gray-600">Observações</label>
-                        <textarea id="observacoes" name="observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"></textarea>
-                    </div>
-                    <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 shadow-md hover:shadow-lg">
-                        Salvar Atendimento
-                    </button>
-                </form>
+                </div>
             </div>
 
-            <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.2s;">
-                <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Histórico de Atendimentos</h2>
-                <div id="lista-atendimentos" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                    <!-- Atendimentos serão inseridos aqui -->
-                </div>
+            <!-- PÁGINA DO DASHBOARD GERENCIAL -->
+            <div id="page-dashboard" class="fade-in hidden">
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Gráfico 1: Atendimentos por Mês -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Evolução dos Atendimentos</h3>
+                        <div id="chart-container-monthly" class="relative h-80">
+                           <canvas id="atendimentosPorMesChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Gráfico 2: Atendimentos por Tipo de Serviço -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Distribuição de Serviços</h3>
+                        <div id="chart-container-services" class="relative h-80 flex justify-center items-center">
+                            <canvas id="atendimentosPorServicoChart"></canvas>
+                        </div>
+                    </div>
+                 </div>
             </div>
         </main>
         
@@ -83,19 +102,12 @@
         </footer>
     </div>
 
-    <div id="loading-screen" class="flex justify-center items-center h-screen">
-        <div>
-            <div class="loader"></div>
-            <p class="text-center text-gray-600">Conectando ao banco de dados...</p>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
+        // const firebaseConfig = {
   apiKey: "AIzaSyA23XFm_O2ZUJQU_BePuSYwBqv-2tEol08",
   authDomain: "sra-suas.firebaseapp.com",
   projectId: "sra-suas",
@@ -104,7 +116,17 @@
   appId: "1:822160886742:web:f7a4400e8e11e1fbabb277",
   measurementId: "G-5X706VZFZG"
 };
-
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config)
+            : {
+                apiKey: "COLE_SUA_API_KEY_AQUI",
+                authDomain: "seu-projeto.firebaseapp.com",
+                projectId: "seu-projeto",
+                storageBucket: "seu-projeto.appspot.com",
+                messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+                appId: "SEU_APP_ID"
+            };
+        // *************************************************
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -113,70 +135,182 @@
         
         let currentUserId = null;
         let unsubscribe = null;
+        let monthlyChart = null;
+        let servicesChart = null;
 
         const form = document.getElementById('form-atendimento');
         const listaAtendimentos = document.getElementById('lista-atendimentos');
         const dataAtendimentoInput = document.getElementById('dataAtendimento');
         const loadingScreen = document.getElementById('loading-screen');
-        const appContent = document.getElementById('app-content');
+        const appContainer = document.getElementById('app-container');
         const sessionIdSpan = document.getElementById('session-id');
+
+        // Lógica de Navegação
+        const navRegistro = document.getElementById('nav-registro');
+        const navDashboard = document.getElementById('nav-dashboard');
+        const pageRegistro = document.getElementById('page-registro');
+        const pageDashboard = document.getElementById('page-dashboard');
+
+        navRegistro.addEventListener('click', () => {
+            pageRegistro.classList.remove('hidden');
+            pageDashboard.classList.add('hidden');
+            navRegistro.classList.add('active');
+            navDashboard.classList.remove('active');
+        });
+
+        navDashboard.addEventListener('click', () => {
+            pageDashboard.classList.remove('hidden');
+            pageRegistro.classList.add('hidden');
+            navDashboard.classList.add('active');
+            navRegistro.classList.remove('active');
+        });
+
 
         const renderAtendimentos = (atendimentos) => {
             listaAtendimentos.innerHTML = '';
             if (atendimentos.length === 0) {
-                listaAtendimentos.innerHTML = `<div class="text-center text-gray-500 p-8 border-2 border-dashed rounded-lg">Nenhum atendimento registrado ainda.</div>`;
+                listaAtendimentos.innerHTML = `<div class="text-center text-gray-500 p-8 border-2 border-dashed rounded-lg">Nenhum atendimento registrado.</div>`;
                 return;
             }
-
-            atendimentos.forEach((atendimento, index) => {
-                const data = atendimento.dataAtendimento.toDate();
+            atendimentos.forEach((at, index) => {
+                const data = at.dataAtendimento.toDate();
                 const dataFormatada = data.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-
                 const div = document.createElement('div');
                 div.className = 'p-4 border rounded-xl shadow-sm bg-gray-50 hover:bg-indigo-50 transition-all duration-300 hover:shadow-md fade-in';
                 div.style.animationDelay = `${index * 0.05}s`;
                 div.innerHTML = `
                     <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-bold text-lg text-green-800">${atendimento.nomeFamilia}</p>
-                            <p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Serviço:</span> ${atendimento.tipoServico}</p>
-                            <p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Data:</span> ${dataFormatada}</p>
-                        </div>
-                        <button data-id="${atendimento.id}" class="btn-excluir text-red-400 hover:text-red-600 font-bold p-1 rounded-full transition-colors">&times;</button>
+                        <div><p class="font-bold text-lg text-green-800">${at.nomeFamilia}</p><p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Serviço:</span> ${at.tipoServico}</p><p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Data:</span> ${dataFormatada}</p></div>
+                        <button data-id="${at.id}" class="btn-excluir text-red-400 hover:text-red-600 font-bold p-1 rounded-full">&times;</button>
                     </div>
-                    ${atendimento.observacoes ? `<p class="mt-3 pt-3 border-t border-gray-200 text-gray-700 whitespace-pre-wrap">${atendimento.observacoes}</p>` : ''}
+                    ${at.observacoes ? `<p class="mt-3 pt-3 border-t border-gray-200 text-gray-700 whitespace-pre-wrap">${at.observacoes}</p>` : ''}
                 `;
                 listaAtendimentos.appendChild(div);
             });
         };
+        
+        // --- FUNÇÕES DOS GRÁFICOS ---
+        const showChartMessage = (containerId, message) => {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const canvas = container.querySelector('canvas');
+            if (canvas) canvas.style.display = 'none';
+            
+            let messageDiv = container.querySelector('.chart-message');
+            if (!messageDiv) {
+                messageDiv = document.createElement('div');
+                messageDiv.className = 'chart-message flex items-center justify-center h-full text-gray-500';
+                container.appendChild(messageDiv);
+            }
+            messageDiv.textContent = message;
+        };
+        
+        const hideChartMessage = (containerId) => {
+             const container = document.getElementById(containerId);
+             if (!container) return;
+             const canvas = container.querySelector('canvas');
+             if (canvas) canvas.style.display = 'block';
+             const messageDiv = container.querySelector('.chart-message');
+             if (messageDiv) messageDiv.remove();
+        }
 
+        const updateCharts = (atendimentos) => {
+            if (atendimentos.length === 0) {
+                 showChartMessage('chart-container-monthly', 'Dados insuficientes para gerar gráficos.');
+                 showChartMessage('chart-container-services', 'Dados insuficientes para gerar gráficos.');
+                return;
+            }
+            
+            hideChartMessage('chart-container-monthly');
+            hideChartMessage('chart-container-services');
+
+            // Processamento para Gráfico Mensal (CORRIGIDO)
+            const monthlyData = atendimentos.reduce((acc, curr) => {
+                const date = curr.dataAtendimento.toDate();
+                const key = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`; // Chave para ordenação: YYYY-MM
+                if (!acc[key]) {
+                    acc[key] = { 
+                        count: 0, 
+                        label: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) // Rótulo: jun/25
+                    };
+                }
+                acc[key].count++;
+                return acc;
+            }, {});
+
+            const sortedKeys = Object.keys(monthlyData).sort();
+            const monthlyLabels = sortedKeys.map(key => monthlyData[key].label);
+            const monthlyCounts = sortedKeys.map(key => monthlyData[key].count);
+
+            // Processamento para Gráfico de Serviços
+            const servicesData = atendimentos.reduce((acc, curr) => {
+                acc[curr.tipoServico] = (acc[curr.tipoServico] || 0) + 1;
+                return acc;
+            }, {});
+
+            // Renderizar Gráfico Mensal
+            const monthlyCtx = document.getElementById('atendimentosPorMesChart').getContext('2d');
+            if(monthlyChart) monthlyChart.destroy();
+            monthlyChart = new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [{
+                        label: 'Nº de Atendimentos',
+                        data: monthlyCounts,
+                        borderColor: '#16A34A',
+                        backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Renderizar Gráfico de Serviços
+            const servicesCtx = document.getElementById('atendimentosPorServicoChart').getContext('2d');
+            if(servicesChart) servicesChart.destroy();
+            servicesChart = new Chart(servicesCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(servicesData),
+                    datasets: [{
+                        label: 'Tipos de Serviço',
+                        data: Object.values(servicesData),
+                        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#6366F1'],
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        };
+
+        // --- LÓGICA PRINCIPAL ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
-                sessionIdSpan.textContent = currentUserId; // Mostra o ID na tela
+                sessionIdSpan.textContent = currentUserId;
                 
                 if (unsubscribe) unsubscribe();
 
                 const atendimentosCollection = collection(db, `artifacts/${appId}/users/${currentUserId}/atendimentos`);
-                const q = query(atendimentosCollection, orderBy("dataAtendimento", "desc"));
+                const q = query(atendimentosCollection, orderBy("criadoEm", "desc"));
                 
                 unsubscribe = onSnapshot(q, (snapshot) => {
                     const atendimentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     renderAtendimentos(atendimentos);
+                    updateCharts(atendimentos); // Atualiza os gráficos com os novos dados
                 });
 
                 loadingScreen.classList.add('hidden');
-                appContent.classList.remove('hidden');
+                appContainer.classList.remove('hidden');
             } else {
                 try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
+                    const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    if (token) await signInWithCustomToken(auth, token);
+                    else await signInAnonymously(auth);
                 } catch (error) {
-                    console.error("Erro ao fazer login:", error);
-                    loadingScreen.innerHTML = `<p class="text-red-500">Falha ao conectar. Verifique sua configuração do Firebase e as regras de segurança.</p>`;
+                    console.error("Erro no login:", error);
+                    loadingScreen.innerHTML = `<p class="text-red-500">Falha ao conectar. Verifique sua configuração do Firebase.</p>`;
                 }
             }
         });
@@ -197,13 +331,12 @@
             };
 
             try {
-                const atendimentosCollection = collection(db, `artifacts/${appId}/users/${currentUserId}/atendimentos`);
-                await addDoc(atendimentosCollection, novoAtendimento);
+                await addDoc(collection(db, `artifacts/${appId}/users/${currentUserId}/atendimentos`), novoAtendimento);
                 form.reset();
                 dataAtendimentoInput.valueAsDate = new Date();
             } catch (error) {
-                console.error("Erro ao salvar atendimento: ", error);
-                alert("Ocorreu um erro ao salvar. Tente novamente.");
+                console.error("Erro ao salvar: ", error);
+                alert("Ocorreu um erro ao salvar.");
             } finally {
                  btn.disabled = false;
                  btn.textContent = "Salvar Atendimento";
@@ -213,14 +346,12 @@
         listaAtendimentos.addEventListener('click', async (e) => {
             if (e.target.classList.contains('btn-excluir')) {
                 const idParaExcluir = e.target.getAttribute('data-id');
-                // Substitui o confirm() por uma lógica de UI não bloqueante no futuro
                 if (window.confirm('Tem certeza que deseja excluir este atendimento?')) {
                     try {
-                        const docRef = doc(db, `artifacts/${appId}/users/${currentUserId}/atendimentos`, idParaExcluir);
-                        await deleteDoc(docRef);
+                        await deleteDoc(doc(db, `artifacts/${appId}/users/${currentUserId}/atendimentos`, idParaExcluir));
                     } catch (error) {
-                        console.error("Erro ao excluir atendimento: ", error);
-                        alert("Ocorreu um erro ao excluir. Tente novamente.");
+                        console.error("Erro ao excluir: ", error);
+                        alert("Ocorreu um erro ao excluir.");
                     }
                 }
             }

@@ -2,7 +2,7 @@
   "name": "Registro de Atendimentos",
   "short_name": "Atendimentos",
   "description": "Aplicativo para registro de atendimentos da Assistência Social.",
-  "start_url": "/",
+  "start_url": "/app-assistencia-social/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563EB",

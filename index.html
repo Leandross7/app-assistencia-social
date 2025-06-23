@@ -61,7 +61,6 @@
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
                         <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Novo Atendimento</h2>
                         <form id="form-atendimento" class="space-y-4">
-                            <!-- Campos do formulário permanecem os mesmos -->
                             <div><label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input type="text" id="nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
                             <div><label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input type="date" id="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
                             <div><label for="tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select id="tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"><option value="">Selecione...</option><option value="Acompanhamento Familiar">Acompanhamento Familiar</option><option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option><option value="Orientação Jurídica">Orientação Jurídica</option><option value="Apoio Psicológico">Apoio Psicológico</option><option value="Cadastro Único">Cadastro Único</option><option value="Outro">Outro</option></select></div>
@@ -79,14 +78,12 @@
             <!-- PÁGINA DO DASHBOARD GERENCIAL -->
             <div id="page-dashboard" class="fade-in hidden">
                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Gráfico 1: Atendimentos por Mês -->
                     <div class="bg-white p-6 rounded-xl shadow-lg">
                         <h3 class="text-xl font-semibold text-gray-700 mb-4">Evolução dos Atendimentos</h3>
                         <div id="chart-container-monthly" class="relative h-80">
                            <canvas id="atendimentosPorMesChart"></canvas>
                         </div>
                     </div>
-                    <!-- Gráfico 2: Atendimentos por Tipo de Serviço -->
                     <div class="bg-white p-6 rounded-xl shadow-lg">
                         <h3 class="text-xl font-semibold text-gray-700 mb-4">Distribuição de Serviços</h3>
                         <div id="chart-container-services" class="relative h-80 flex justify-center items-center">
@@ -145,7 +142,6 @@
         const appContainer = document.getElementById('app-container');
         const sessionIdSpan = document.getElementById('session-id');
 
-        // Lógica de Navegação
         const navRegistro = document.getElementById('nav-registro');
         const navDashboard = document.getElementById('nav-dashboard');
         const pageRegistro = document.getElementById('page-registro');
@@ -164,7 +160,6 @@
             navDashboard.classList.add('active');
             navRegistro.classList.remove('active');
         });
-
 
         const renderAtendimentos = (atendimentos) => {
             listaAtendimentos.innerHTML = '';
@@ -189,13 +184,11 @@
             });
         };
         
-        // --- FUNÇÕES DOS GRÁFICOS ---
         const showChartMessage = (containerId, message) => {
             const container = document.getElementById(containerId);
             if (!container) return;
             const canvas = container.querySelector('canvas');
             if (canvas) canvas.style.display = 'none';
-            
             let messageDiv = container.querySelector('.chart-message');
             if (!messageDiv) {
                 messageDiv = document.createElement('div');
@@ -224,15 +217,11 @@
             hideChartMessage('chart-container-monthly');
             hideChartMessage('chart-container-services');
 
-            // Processamento para Gráfico Mensal (CORRIGIDO)
             const monthlyData = atendimentos.reduce((acc, curr) => {
                 const date = curr.dataAtendimento.toDate();
-                const key = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`; // Chave para ordenação: YYYY-MM
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
                 if (!acc[key]) {
-                    acc[key] = { 
-                        count: 0, 
-                        label: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) // Rótulo: jun/25
-                    };
+                    acc[key] = { count: 0, label: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) };
                 }
                 acc[key].count++;
                 return acc;
@@ -242,13 +231,11 @@
             const monthlyLabels = sortedKeys.map(key => monthlyData[key].label);
             const monthlyCounts = sortedKeys.map(key => monthlyData[key].count);
 
-            // Processamento para Gráfico de Serviços
             const servicesData = atendimentos.reduce((acc, curr) => {
                 acc[curr.tipoServico] = (acc[curr.tipoServico] || 0) + 1;
                 return acc;
             }, {});
 
-            // Renderizar Gráfico Mensal
             const monthlyCtx = document.getElementById('atendimentosPorMesChart').getContext('2d');
             if(monthlyChart) monthlyChart.destroy();
             monthlyChart = new Chart(monthlyCtx, {
@@ -267,7 +254,6 @@
                 options: { responsive: true, maintainAspectRatio: false }
             });
 
-            // Renderizar Gráfico de Serviços
             const servicesCtx = document.getElementById('atendimentosPorServicoChart').getContext('2d');
             if(servicesChart) servicesChart.destroy();
             servicesChart = new Chart(servicesCtx, {
@@ -284,23 +270,21 @@
             });
         };
 
-        // --- LÓGICA PRINCIPAL ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
                 sessionIdSpan.textContent = currentUserId;
-                
                 if (unsubscribe) unsubscribe();
-
                 const atendimentosCollection = collection(db, `artifacts/${appId}/users/${currentUserId}/atendimentos`);
                 const q = query(atendimentosCollection, orderBy("criadoEm", "desc"));
-                
                 unsubscribe = onSnapshot(q, (snapshot) => {
                     const atendimentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     renderAtendimentos(atendimentos);
-                    updateCharts(atendimentos); // Atualiza os gráficos com os novos dados
+                    updateCharts(atendimentos);
+                }, (error) => {
+                    console.error("Erro no onSnapshot:", error);
+                    loadingScreen.innerHTML = `<p class="text-red-500">Erro ao carregar dados. Verifique o console para mais detalhes.</p>`;
                 });
-
                 loadingScreen.classList.add('hidden');
                 appContainer.classList.remove('hidden');
             } else {

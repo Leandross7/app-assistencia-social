@@ -1,26 +1,26 @@
 // Define um nome e uma versão para o cache. Mudar a versão invalida o cache antigo.
-const CACHE_NAME = 'atendimentos-cache-v2';
+const CACHE_NAME = 'atendimentos-cache-v3';
+const REPO_NAME = '/app-assistencia-social'; // <-- ALTERE AQUI PARA O NOME DO SEU REPOSITÓRIO
 
 // Lista de arquivos essenciais para o funcionamento offline do app.
-// Adicionamos o 'chart.js' a esta lista.
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json', // É bom cachear o manifesto também
+  `${REPO_NAME}/`,
+  `${REPO_NAME}/index.html`,
+  `${REPO_NAME}/manifest.json`,
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
-  'https://cdn.jsdelivr.net/npm/chart.js' // <-- ARQUIVO QUE FALTAVA
+  'https://cdn.jsdelivr.net/npm/chart.js'
 ];
 
 // Evento 'install': é disparado quando o service worker é instalado
 self.addEventListener('install', event => {
-  // Espera até que o cache seja aberto e todos os arquivos essenciais sejam armazenados
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Cache aberto e arquivos sendo salvos.');
         return cache.addAll(urlsToCache);
       })
+      .then(() => self.skipWaiting()) // Força o novo service worker a ativar imediatamente
   );
 });
 
@@ -38,21 +38,17 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  return self.clients.claim(); // Garante que o novo service worker controle a página imediatamente
 });
 
 
 // Evento 'fetch': é disparado para cada requisição feita pela página
 self.addEventListener('fetch', event => {
   event.respondWith(
-    // Tenta encontrar a requisição no cache primeiro
     caches.match(event.request)
       .then(response => {
-        // Se a resposta for encontrada no cache, a retorna
-        if (response) {
-          return response;
-        }
-        // Se não for encontrada no cache, faz a requisição à rede
-        return fetch(event.request);
+        // Retorna do cache se encontrar, senão busca na rede
+        return response || fetch(event.request);
       }
     )
   );

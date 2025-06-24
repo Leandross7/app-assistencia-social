@@ -7,9 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Biblioteca de Gráficos Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Biblioteca para exportar para Excel (XLSX) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     
     <link rel="manifest" href="manifest.json">
@@ -31,7 +29,6 @@
 </head>
 <body class="text-gray-800">
 
-    <!-- Tela de Login e Cadastro -->
     <div id="auth-container" class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
         <div class="w-full max-w-md">
             <div class="flex justify-center mb-6">
@@ -60,7 +57,6 @@
         </div>
     </div>
     
-    <!-- Conteúdo Principal do App -->
     <div id="app-container" class="hidden">
         <header class="bg-white shadow-md sticky top-0 z-20">
             <div class="container mx-auto px-4 py-3">
@@ -73,7 +69,6 @@
         </header>
 
         <main id="app-content" class="container mx-auto p-4 md:p-8">
-            <!-- PÁGINA DE REGISTRO -->
             <div id="page-registro" class="fade-in">
                  <div class="bg-white p-4 rounded-xl shadow-lg mb-8">
                     <div class="flex items-center gap-2 border-b-2 border-transparent focus-within:border-green-500 transition-colors">
@@ -84,7 +79,6 @@
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
                         <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Novo Atendimento</h2>
-                        <!-- CORREÇÃO: Os campos do formulário foram restaurados aqui -->
                         <form id="form-atendimento" class="space-y-4">
                             <div><label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input name="nomeFamilia" type="text" id="nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
                             <div><label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input name="dataAtendimento" type="date" id="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
@@ -100,7 +94,6 @@
                 </div>
             </div>
 
-            <!-- PÁGINA DO DASHBOARD GERENCIAL -->
             <div id="page-dashboard" class="fade-in hidden">
                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-xl font-semibold text-gray-700 mb-4">Evolução dos Atendimentos</h3><div id="chart-container-monthly" class="relative h-80"><canvas id="atendimentosPorMesChart"></canvas></div></div>
@@ -117,7 +110,6 @@
                  </div>
             </div>
 
-            <!-- PÁGINA DE ADMINISTRAÇÃO -->
             <div id="page-admin" class="fade-in hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
@@ -140,12 +132,11 @@
         </main>
         
         <footer class="text-center mt-10 pb-4 text-xs text-gray-500">
-            <p>Usuário: <span id="user-email-display-footer" class="font-mono">N/A</span> | Versão 1.03b</p>
+            <p>Usuário: <span id="user-email-display-footer" class="font-mono">N/A</span> | Versão 1.03c</p>
         </footer>
     </div>
     
-    <!-- MODAL DE EDIÇÃO -->
-    <div id="edit-modal-backdrop" class="fixed inset-0 z-30 hidden items-center justify-center">
+    <div id="edit-modal-backdrop" class="fixed inset-0 z-30 hidden items-center justify-center p-4">
         <div id="edit-modal" class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg transform transition-all -translate-y-10 opacity-0">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-700">Editar Atendimento</h2>
@@ -170,7 +161,7 @@
         import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, deleteDoc, serverTimestamp, setDoc, getDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Configuração do Firebase
-const firebaseConfig = {
+   const firebaseConfig = {
   apiKey: "AIzaSyA23XFm_O2ZUJQU_BePuSYwBqv-2tEol08",
   authDomain: "sra-suas.firebaseapp.com",
   projectId: "sra-suas",
@@ -191,6 +182,8 @@ const firebaseConfig = {
         let allAttendances = [];
         let unsubscribeAttendances = null;
         let unsubscribeUsers = null;
+        let monthlyChart = null;
+        let servicesChart = null;
 
         // --- Seletores de Elementos da UI ---
         const authContainer = document.getElementById('auth-container');
@@ -217,6 +210,7 @@ const firebaseConfig = {
         const usersListContainer = document.getElementById('users-list');
         const adminFeedback = document.getElementById('admin-feedback');
         const exportExcelBtn = document.getElementById('export-excel-btn');
+        const dataAtendimentoInputForm = document.getElementById('dataAtendimento');
 
         // --- Lógica de Autenticação ---
         
@@ -298,14 +292,10 @@ const firebaseConfig = {
             };
             const visiblePages = Object.keys(pages).filter(pageId => rolesVisibility[pageId].includes(userProfile?.role));
             
-            visiblePages.forEach((pageId, index) => {
+            visiblePages.forEach((pageId) => {
                 const button = document.createElement('button');
                 button.textContent = pages[pageId];
                 button.className = 'nav-button px-4 py-1.5 text-sm font-semibold rounded-md';
-                if (index === 0) {
-                     button.classList.add('active');
-                     document.getElementById(pageId).classList.remove('hidden');
-                }
                 button.addEventListener('click', () => {
                     mainNav.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                     button.classList.add('active');
@@ -314,10 +304,13 @@ const firebaseConfig = {
                 });
                 mainNav.appendChild(button);
             });
-            // Oculta todas as páginas e mostra a primeira visível
-            Object.keys(pages).forEach(pId => document.getElementById(pId)?.classList.add('hidden'));
-            if(visiblePages.length > 0) {
-                 document.getElementById(visiblePages[0]).classList.remove('hidden');
+            
+            // Ativa o primeiro botão e mostra a primeira página por padrão
+            const firstButton = mainNav.querySelector('button');
+            if (firstButton) {
+                firstButton.classList.add('active');
+                const firstPageId = visiblePages[0];
+                document.getElementById(firstPageId).classList.remove('hidden');
             }
         }
 
@@ -347,7 +340,7 @@ const firebaseConfig = {
                 return;
             }
             attendances.forEach(at => {
-                if (!at.dataAtendimento) return;
+                if (!at.dataAtendimento || typeof at.dataAtendimento.toDate !== 'function') return;
                 const dataFormatada = at.dataAtendimento.toDate().toLocaleDateString('pt-BR');
                 const div = document.createElement('div');
                 div.className = 'p-4 border rounded-xl shadow-sm bg-gray-50 hover:shadow-md transition-all duration-300 cursor-pointer';
@@ -369,6 +362,7 @@ const firebaseConfig = {
                 autorEmail: currentUser.email
             });
             e.target.reset();
+            dataAtendimentoInputForm.valueAsDate = new Date();
         });
         
         function openEditModal(atendimento) {
@@ -425,14 +419,10 @@ const firebaseConfig = {
             });
         }
 
-        addUserForm.addEventListener('submit', async (e) => {
+        addUserForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            adminFeedback.textContent = '';
-            const name = addUserForm['new-user-name'].value;
-            const email = addUserForm['new-user-email'].value;
-            const role = addUserForm['new-user-role'].value;
-            adminFeedback.textContent = 'Esta função requer Cloud Functions para criar usuários no Auth. Isto é uma simulação.';
             adminFeedback.className = 'text-blue-600 text-sm text-center mt-4 h-4';
+            adminFeedback.textContent = 'Esta função requer Cloud Functions. Isto é uma simulação.';
         });
         
         // --- Lógica de Dashboard e Relatórios ---
@@ -444,7 +434,51 @@ const firebaseConfig = {
                 const option = document.createElement('option');
                 option.value = s; option.textContent = s; serviceFilter.appendChild(option);
              });
-             // ... implementação dos gráficos ...
+             updateAllCharts(attendances);
+        }
+        
+        function updateAllCharts(attendances) {
+            if (attendances.length === 0) {
+                 showChartMessage('chart-container-monthly', 'Sem dados para exibir.');
+                 showChartMessage('chart-container-services', 'Sem dados para exibir.');
+                return;
+            }
+            hideChartMessage('chart-container-monthly');
+            hideChartMessage('chart-container-services');
+
+            const monthlyData = attendances.reduce((acc, curr) => {
+                if (!curr.dataAtendimento?.toDate) return acc;
+                const date = curr.dataAtendimento.toDate();
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                if (!acc[key]) acc[key] = { count: 0, label: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) };
+                acc[key].count++;
+                return acc;
+            }, {});
+            const sortedKeys = Object.keys(monthlyData).sort();
+            const monthlyLabels = sortedKeys.map(key => monthlyData[key].label);
+            const monthlyCounts = sortedKeys.map(key => monthlyData[key].count);
+
+            const servicesData = attendances.reduce((acc, curr) => {
+                acc[curr.tipoServico] = (acc[curr.tipoServico] || 0) + 1;
+                return acc;
+            }, {});
+
+            const monthlyCtx = document.getElementById('atendimentosPorMesChart').getContext('2d');
+            if(monthlyChart) monthlyChart.destroy();
+            monthlyChart = new Chart(monthlyCtx, { type: 'line', data: { labels: monthlyLabels, datasets: [{ label: 'Nº de Atendimentos', data: monthlyCounts, borderColor: '#16A34A', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } });
+
+            const servicesCtx = document.getElementById('atendimentosPorServicoChart').getContext('2d');
+            if(servicesChart) servicesChart.destroy();
+            servicesChart = new Chart(servicesCtx, { type: 'doughnut', data: { labels: Object.keys(servicesData), datasets: [{ label: 'Tipos de Serviço', data: Object.values(servicesData), backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#6366F1'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+        }
+        
+        function showChartMessage(containerId, message) {
+            const container = document.getElementById(containerId); if (!container) return;
+            container.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">${message}</div>`;
+        }
+        function hideChartMessage(containerId) {
+             const container = document.getElementById(containerId); if (!container) return;
+             container.innerHTML = `<canvas id="${container.firstElementChild.id}"></canvas>`;
         }
 
         exportExcelBtn.addEventListener('click', () => {
@@ -453,7 +487,7 @@ const firebaseConfig = {
             const service = document.getElementById('report-service-filter').value;
             
             const filteredData = allAttendances.filter(at => {
-                if(!at.dataAtendimento) return false;
+                if(!at.dataAtendimento?.toDate) return false;
                 const atDate = at.dataAtendimento.toDate();
                 const isAfterStart = !startDateEl.value || atDate >= new Date(startDateEl.value + 'T00:00:00-03:00');
                 const isBeforeEnd = !endDateEl.value || atDate <= new Date(endDateEl.value + 'T23:59:59-03:00');
@@ -464,18 +498,17 @@ const firebaseConfig = {
             if (filteredData.length === 0) { alert('Nenhum dado encontrado para os filtros selecionados.'); return; }
 
             const dataToExport = filteredData.map(at => ({
-                'Nome da Família': at.nomeFamilia,
-                'Data do Atendimento': at.dataAtendimento.toDate().toLocaleDateString('pt-BR'),
+                'Nome da Família': at.nomeFamilia, 'Data do Atendimento': at.dataAtendimento.toDate().toLocaleDateString('pt-BR'),
                 'Tipo de Serviço': at.tipoServico, 'Observações': at.observacoes, 'Profissional': at.autorEmail
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(dataToExport);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Atendimentos");
-            XLSX.writeFile(workbook, "Relatorio_Atendimentos.xlsx");
+            XLSX.writeFile(workbook, `Relatorio_Atendimentos_${new Date().toISOString().slice(0,10)}.xlsx`);
         });
-
+        
+        dataAtendimentoInputForm.valueAsDate = new Date();
     </script>
-
 </body>
 </html>

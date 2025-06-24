@@ -84,11 +84,12 @@
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
                         <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Novo Atendimento</h2>
+                        <!-- CORREÇÃO: Os campos do formulário foram restaurados aqui -->
                         <form id="form-atendimento" class="space-y-4">
-                            <div><label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input type="text" id="nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
-                            <div><label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input type="date" id="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
-                            <div><label for="tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select id="tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"><option value="">Selecione...</option><option value="Acompanhamento Familiar">Acompanhamento Familiar</option><option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option><option value="Orientação Jurídica">Orientação Jurídica</option><option value="Apoio Psicológico">Apoio Psicológico</option><option value="Cadastro Único">Cadastro Único</option><option value="Outro">Outro</option></select></div>
-                            <div><label for="observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea id="observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></textarea></div>
+                            <div><label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input name="nomeFamilia" type="text" id="nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
+                            <div><label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input name="dataAtendimento" type="date" id="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
+                            <div><label for="tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select name="tipoServico" id="tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"><option value="">Selecione...</option><option value="Acompanhamento Familiar">Acompanhamento Familiar</option><option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option><option value="Orientação Jurídica">Orientação Jurídica</option><option value="Apoio Psicológico">Apoio Psicológico</option><option value="Cadastro Único">Cadastro Único</option><option value="Outro">Outro</option></select></div>
+                            <div><label for="observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea name="observacoes" id="observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></textarea></div>
                             <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-md hover:shadow-lg">Salvar Atendimento</button>
                         </form>
                     </div>
@@ -139,7 +140,7 @@
         </main>
         
         <footer class="text-center mt-10 pb-4 text-xs text-gray-500">
-            <p>Usuário: <span id="user-email-display" class="font-mono">N/A</span> | Versão 1.03v</p>
+            <p>Usuário: <span id="user-email-display-footer" class="font-mono">N/A</span> | Versão 1.03b</p>
         </footer>
     </div>
     
@@ -169,7 +170,7 @@
         import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, deleteDoc, serverTimestamp, setDoc, getDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Configuração do Firebase
-  const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyA23XFm_O2ZUJQU_BePuSYwBqv-2tEol08",
   authDomain: "sra-suas.firebaseapp.com",
   projectId: "sra-suas",
@@ -203,7 +204,7 @@
         const registerView = document.getElementById('register-view');
         const mainNav = document.getElementById('main-nav');
         const logoutBtn = document.getElementById('logout-btn');
-        const userEmailDisplay = document.getElementById('user-email-display');
+        const userEmailDisplayFooter = document.getElementById('user-email-display-footer');
         const searchInput = document.getElementById('search-input');
         const attendanceListContainer = document.getElementById('lista-atendimentos');
         const newAttendanceForm = document.getElementById('form-atendimento');
@@ -219,70 +220,43 @@
 
         // --- Lógica de Autenticação ---
         
-        // Mostrar formulário de registro
-        showRegisterLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginView.classList.add('hidden');
-            registerView.classList.remove('hidden');
-        });
+        showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); loginView.classList.add('hidden'); registerView.classList.remove('hidden'); });
+        showLoginLink.addEventListener('click', (e) => { e.preventDefault(); registerView.classList.add('hidden'); loginView.classList.remove('hidden'); });
 
-        // Mostrar formulário de login
-        showLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerView.classList.add('hidden');
-            loginView.classList.remove('hidden');
-        });
-
-        // Processar Login
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             authError.textContent = '';
             const email = loginForm['login-email'].value;
             const password = loginForm['login-password'].value;
             signInWithEmailAndPassword(auth, email, password)
-                .catch(error => {
-                    authError.textContent = "Email ou senha inválidos.";
-                    console.error("Erro de login:", error.message);
-                });
+                .catch(error => { authError.textContent = "Email ou senha inválidos."; console.error("Erro de login:", error.message); });
         });
 
-        // Processar Registro do primeiro Admin
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             authError.textContent = '';
             const name = registerForm['register-name'].value;
             const email = registerForm['register-email'].value;
             const password = registerForm['register-password'].value;
-
-            // Verifica se já existe algum usuário (regra de negócio: só permite auto-registro se não houver admins)
+            
             const usersQuery = query(collection(db, "users"), where("role", "==", "admin"));
             const adminSnapshot = await getDocs(usersQuery);
 
             if (!adminSnapshot.empty) {
-                authError.textContent = "O registro já foi feito. Contate o administrador.";
+                authError.textContent = "O registro de administrador já foi feito.";
                 return;
             }
 
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                // Cria o perfil do usuário no Firestore
-                await setDoc(doc(db, "users", user.uid), {
-                    name: name,
-                    email: email,
-                    role: 'admin',
-                    createdAt: serverTimestamp()
-                });
+                await setDoc(doc(db, "users", user.uid), { name, email, role: 'admin', createdAt: serverTimestamp() });
             } catch (error) {
-                authError.textContent = "Erro ao cadastrar. Verifique os dados.";
-                console.error("Erro de registro:", error.message);
+                authError.textContent = "Erro ao cadastrar. Verifique os dados."; console.error("Erro de registro:", error.message);
             }
         });
         
-        // Processar Logout
-        logoutBtn.addEventListener('click', () => {
-            signOut(auth);
-        });
+        logoutBtn.addEventListener('click', () => { signOut(auth); });
 
         // --- Listener de Autenticação Principal ---
         onAuthStateChanged(auth, async (user) => {
@@ -291,7 +265,7 @@
                 await fetchUserProfile(user.uid);
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
-                userEmailDisplay.textContent = user.email;
+                userEmailDisplayFooter.textContent = user.email;
                 setupNavigation();
                 listenForAttendances();
                 if (userProfile?.role === 'admin') {
@@ -316,51 +290,46 @@
 
         function setupNavigation() {
             mainNav.innerHTML = '';
-            const pages = {
-                'page-registro': { text: 'Registro', roles: ['admin', 'user', 'psychologist', 'technician', 'intern'] },
-                'page-dashboard': { text: 'Dashboard', roles: ['admin', 'user', 'psychologist', 'technician', 'intern'] },
-                'page-admin': { text: 'Administração', roles: ['admin'] }
+            const pages = { 'page-registro': 'Registro', 'page-dashboard': 'Dashboard', 'page-admin': 'Administração' };
+            const rolesVisibility = {
+                'page-registro': ['admin', 'user', 'psychologist', 'technician', 'intern'],
+                'page-dashboard': ['admin', 'user', 'psychologist', 'technician', 'intern'],
+                'page-admin': ['admin']
             };
-
-            Object.keys(pages).forEach((pageId, index) => {
-                const pageInfo = pages[pageId];
-                if (pageInfo.roles.includes(userProfile?.role)) {
-                    const button = document.createElement('button');
-                    button.textContent = pageInfo.text;
-                    button.className = 'nav-button px-4 py-1.5 text-sm font-semibold rounded-md';
-                    if (index === 0) { // Ativa o primeiro botão por padrão
-                        button.classList.add('active');
-                        document.getElementById(pageId).classList.remove('hidden');
-                    } else {
-                        document.getElementById(pageId).classList.add('hidden');
-                    }
-                    button.addEventListener('click', () => {
-                        document.querySelectorAll('#app-content > div').forEach(p => p.classList.add('hidden'));
-                        document.getElementById(pageId).classList.remove('hidden');
-                        mainNav.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-                        button.classList.add('active');
-                    });
-                    mainNav.appendChild(button);
+            const visiblePages = Object.keys(pages).filter(pageId => rolesVisibility[pageId].includes(userProfile?.role));
+            
+            visiblePages.forEach((pageId, index) => {
+                const button = document.createElement('button');
+                button.textContent = pages[pageId];
+                button.className = 'nav-button px-4 py-1.5 text-sm font-semibold rounded-md';
+                if (index === 0) {
+                     button.classList.add('active');
+                     document.getElementById(pageId).classList.remove('hidden');
                 }
+                button.addEventListener('click', () => {
+                    mainNav.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    Object.keys(pages).forEach(pId => document.getElementById(pId)?.classList.add('hidden'));
+                    document.getElementById(pageId).classList.remove('hidden');
+                });
+                mainNav.appendChild(button);
             });
-             // Garante que a primeira página visível seja mostrada.
-            const firstVisibleButton = mainNav.querySelector('button');
-            if (firstVisibleButton) {
-                const firstPageId = Object.keys(pages).find(p => pages[p].text === firstVisibleButton.textContent);
-                document.querySelectorAll('#app-content > div').forEach(p => p.classList.add('hidden'));
-                document.getElementById(firstPageId).classList.remove('hidden');
+            // Oculta todas as páginas e mostra a primeira visível
+            Object.keys(pages).forEach(pId => document.getElementById(pId)?.classList.add('hidden'));
+            if(visiblePages.length > 0) {
+                 document.getElementById(visiblePages[0]).classList.remove('hidden');
             }
         }
 
         // --- Lógica de Atendimentos (CRUD + Busca) ---
         function listenForAttendances() {
-            if (unsubscribeAttendances) unsubscribeAttendances();
-            const q = query(collection(db, "atendimentos"), orderBy("dataAtendimento", "desc"));
-            unsubscribeAttendances = onSnapshot(q, snapshot => {
+             if (unsubscribeAttendances) unsubscribeAttendances();
+             const q = query(collection(db, "atendimentos"), orderBy("dataAtendimento", "desc"));
+             unsubscribeAttendances = onSnapshot(q, snapshot => {
                 allAttendances = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
                 renderAttendanceList(allAttendances);
                 updateDashboard(allAttendances);
-            });
+             });
         }
         
         searchInput.addEventListener('input', (e) => {
@@ -378,19 +347,16 @@
                 return;
             }
             attendances.forEach(at => {
-                const data = at.dataAtendimento.toDate();
-                const dataFormatada = data.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                if (!at.dataAtendimento) return;
+                const dataFormatada = at.dataAtendimento.toDate().toLocaleDateString('pt-BR');
                 const div = document.createElement('div');
                 div.className = 'p-4 border rounded-xl shadow-sm bg-gray-50 hover:shadow-md transition-all duration-300 cursor-pointer';
-                div.innerHTML = `
-                    <div><p class="font-bold text-lg text-green-800">${at.nomeFamilia}</p><p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Serviço:</span> ${at.tipoServico}</p><p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Data:</span> ${dataFormatada}</p></div>
-                `;
+                div.innerHTML = `<div><p class="font-bold text-lg text-green-800">${at.nomeFamilia}</p><p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Serviço:</span> ${at.tipoServico}</p><p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Data:</span> ${dataFormatada}</p></div>`;
                 div.addEventListener('click', () => openEditModal(at));
                 attendanceListContainer.appendChild(div);
             });
         }
         
-        // Adicionar novo atendimento
         newAttendanceForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -405,46 +371,36 @@
             e.target.reset();
         });
         
-        // --- Lógica do Modal de Edição ---
         function openEditModal(atendimento) {
             editForm.reset();
             editForm['edit-id'].value = atendimento.id;
             editForm['edit-nomeFamilia'].value = atendimento.nomeFamilia;
-            const date = atendimento.dataAtendimento.toDate();
-            // Formato YYYY-MM-DD para o input date
-            editForm['edit-dataAtendimento'].value = date.toISOString().split('T')[0];
+            editForm['edit-dataAtendimento'].value = atendimento.dataAtendimento.toDate().toISOString().split('T')[0];
             editForm['edit-tipoServico'].value = atendimento.tipoServico;
             editForm['edit-observacoes'].value = atendimento.observacoes;
-            
             editModalBackdrop.classList.remove('hidden');
             editModalBackdrop.classList.add('flex');
-            setTimeout(() => {
-                editModal.classList.remove('-translate-y-10', 'opacity-0');
-            }, 10);
+            setTimeout(() => { editModal.classList.remove('-translate-y-10', 'opacity-0'); }, 10);
         }
 
         function closeEditModal() {
             editModal.classList.add('-translate-y-10', 'opacity-0');
-            setTimeout(() => {
-                editModalBackdrop.classList.add('hidden');
-                editModalBackdrop.classList.remove('flex');
-            }, 300);
+            setTimeout(() => { editModalBackdrop.classList.add('hidden'); editModalBackdrop.classList.remove('flex'); }, 300);
         }
 
         closeModalBtn.addEventListener('click', closeEditModal);
         cancelEditBtn.addEventListener('click', closeEditModal);
+        editModalBackdrop.addEventListener('click', (e) => { if (e.target === editModalBackdrop) closeEditModal(); });
 
         editForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = editForm['edit-id'].value;
-            const updatedData = {
+            await updateDoc(doc(db, "atendimentos", id), {
                 nomeFamilia: editForm['edit-nomeFamilia'].value,
                 dataAtendimento: new Date(editForm['edit-dataAtendimento'].value + 'T00:00:00-03:00'),
                 tipoServico: editForm['edit-tipoServico'].value,
                 observacoes: editForm['edit-observacoes'].value,
-            };
-            const docRef = doc(db, "atendimentos", id);
-            await updateDoc(docRef, updatedData);
+            });
             closeEditModal();
         });
 
@@ -463,13 +419,8 @@
             users.forEach(user => {
                 const div = document.createElement('div');
                 div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
-                div.innerHTML = `
-                    <div>
-                        <p class="font-semibold text-gray-800">${user.name}</p>
-                        <p class="text-sm text-gray-500">${user.email} - <span class="capitalize font-medium">${user.role}</span></p>
-                    </div>
-                    ${user.id !== currentUser.uid ? `<button data-id="${user.id}" class="btn-delete-user text-red-500 hover:text-red-700 text-xs font-semibold">REMOVER</button>` : ''}
-                `;
+                div.innerHTML = `<div><p class="font-semibold text-gray-800">${user.name}</p><p class="text-sm text-gray-500">${user.email} - <span class="capitalize font-medium">${user.role}</span></p></div>
+                    ${user.id !== currentUser.uid ? `<button data-id="${user.id}" class="btn-delete-user text-red-500 hover:text-red-700 text-xs font-semibold">REMOVER</button>` : ''}`;
                 usersListContainer.appendChild(div);
             });
         }
@@ -479,64 +430,43 @@
             adminFeedback.textContent = '';
             const name = addUserForm['new-user-name'].value;
             const email = addUserForm['new-user-email'].value;
-            const password = addUserForm['new-user-password'].value;
             const role = addUserForm['new-user-role'].value;
-            
-            // ATENÇÃO: A criação de usuários por admin exige um backend (Cloud Functions) para ser segura.
-            // Este método cria o usuário no Firestore, mas não no Auth. É uma simplificação.
-            // Para uma solução real, use Cloud Functions para chamar o Admin SDK do Firebase.
-            try {
-                // Simulando a criação de um ID. Em um app real, o ID viria do Auth.
-                const tempId = "user_" + Date.now(); 
-                await setDoc(doc(db, "users", tempId), { name, email, role, createdAt: serverTimestamp() });
-                adminFeedback.textContent = 'Usuário adicionado à lista (simulação).';
-                adminFeedback.className = 'text-green-600 text-sm text-center mt-4 h-4';
-                addUserForm.reset();
-            } catch(error) {
-                 adminFeedback.textContent = 'Erro ao adicionar usuário.';
-                 adminFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4';
-            }
+            adminFeedback.textContent = 'Esta função requer Cloud Functions para criar usuários no Auth. Isto é uma simulação.';
+            adminFeedback.className = 'text-blue-600 text-sm text-center mt-4 h-4';
         });
         
         // --- Lógica de Dashboard e Relatórios ---
         function updateDashboard(attendances) {
-             // Atualiza gráficos e o filtro de serviço para o relatório
-             // ... implementação dos gráficos ...
              const serviceFilter = document.getElementById('report-service-filter');
-             const services = [...new Set(attendances.map(at => at.tipoServico))];
+             const services = [...new Set(attendances.map(at => at.tipoServico))].sort();
              serviceFilter.innerHTML = '<option value="todos">Todos os Serviços</option>';
              services.forEach(s => {
                 const option = document.createElement('option');
-                option.value = s;
-                option.textContent = s;
-                serviceFilter.appendChild(option);
+                option.value = s; option.textContent = s; serviceFilter.appendChild(option);
              });
+             // ... implementação dos gráficos ...
         }
 
         exportExcelBtn.addEventListener('click', () => {
-            const startDate = new Date(document.getElementById('report-start-date').value + 'T00:00:00-03:00');
-            const endDate = new Date(document.getElementById('report-end-date').value + 'T23:59:59-03:00');
+            const startDateEl = document.getElementById('report-start-date');
+            const endDateEl = document.getElementById('report-end-date');
             const service = document.getElementById('report-service-filter').value;
             
             const filteredData = allAttendances.filter(at => {
+                if(!at.dataAtendimento) return false;
                 const atDate = at.dataAtendimento.toDate();
-                const isAfterStart = !document.getElementById('report-start-date').value || atDate >= startDate;
-                const isBeforeEnd = !document.getElementById('report-end-date').value || atDate <= endDate;
+                const isAfterStart = !startDateEl.value || atDate >= new Date(startDateEl.value + 'T00:00:00-03:00');
+                const isBeforeEnd = !endDateEl.value || atDate <= new Date(endDateEl.value + 'T23:59:59-03:00');
                 const isCorrectService = service === 'todos' || at.tipoServico === service;
                 return isAfterStart && isBeforeEnd && isCorrectService;
             });
 
-            if (filteredData.length === 0) {
-                alert('Nenhum dado encontrado para os filtros selecionados.');
-                return;
-            }
+            if (filteredData.length === 0) { alert('Nenhum dado encontrado para os filtros selecionados.'); return; }
 
             const dataToExport = filteredData.map(at => ({
                 'Nome da Família': at.nomeFamilia,
                 'Data do Atendimento': at.dataAtendimento.toDate().toLocaleDateString('pt-BR'),
-                'Tipo de Serviço': at.tipoServico,
-                'Observações': at.observacoes,
-                'Profissional': at.autorEmail
+                'Tipo de Serviço': at.tipoServico, 'Observações': at.observacoes, 'Profissional': at.autorEmail
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(dataToExport);

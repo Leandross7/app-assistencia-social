@@ -6,25 +6,44 @@
     <title>SUAS App - Gestão de Atendimentos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Biblioteca de Gráficos Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Biblioteca para exportar para Excel (XLSX) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#16A34A">
-    <style> body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; } .fade-in { animation: fadeInAnimation 0.5s ease-in-out forwards; } @keyframes fadeInAnimation { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .nav-button { transition: all 0.3s ease; } .nav-button.active { background-color: #16A34A; color: white; } .nav-button:not(.active):hover { background-color: #e5e7eb; } .modal-backdrop { background-color: rgba(0,0,0,0.5); } .modal-content { transition: all 0.3s ease-out; } </style>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+        .fade-in { animation: fadeInAnimation 0.5s ease-in-out forwards; }
+        @keyframes fadeInAnimation { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #16a34a; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .nav-button { transition: all 0.3s ease; }
+        .nav-button.active { background-color: #16A34A; color: white; }
+        .nav-button:not(.active):hover { background-color: #e5e7eb; }
+        /* Estilos para o Modal */
+        #edit-modal-backdrop { background-color: rgba(0,0,0,0.5); }
+        #edit-modal { transition: all 0.3s ease-out; }
+    </style>
 </head>
 <body class="text-gray-800">
 
     <!-- Tela de Login e Cadastro -->
     <div id="auth-container" class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
         <div class="w-full max-w-md">
-            <div class="flex justify-center mb-6"><svg class="h-16 w-16 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg></div>
+            <div class="flex justify-center mb-6">
+                 <svg class="h-16 w-16 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
+            </div>
             <div id="login-view">
                 <form id="login-form" class="bg-white p-8 rounded-xl shadow-lg">
                     <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Login</h2>
-                    <div class="mb-4"><label for="login-email" class="block text-sm font-medium text-gray-600">Email</label><input type="email" id="login-email" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md"></div>
-                    <div class="mb-6"><label for="login-password" class="block text-sm font-medium text-gray-600">Senha</label><input type="password" id="login-password" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md"></div>
-                    <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700">Entrar</button>
-                    <div class="text-center text-sm text-gray-500 mt-4"><a href="#" id="forgot-password-link" class="text-indigo-600 hover:underline">Esqueci minha senha</a><span id="register-link-container" class="hidden"> | <a href="#" id="show-register-link" class="text-green-600 hover:underline">Cadastre-se</a></span></div>
+                    <div class="mb-4"><label for="login-email" class="block text-sm font-medium text-gray-600">Email</label><input type="email" id="login-email" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md focus:ring-green-500 focus:border-green-500"></div>
+                    <div class="mb-6"><label for="login-password" class="block text-sm font-medium text-gray-600">Senha</label><input type="password" id="login-password" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md focus:ring-green-500 focus:border-green-500"></div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">Entrar</button>
+                    <p class="text-center text-sm text-gray-500 mt-4">Não tem uma conta? <a href="#" id="show-register-link" class="text-green-600 hover:underline">Cadastre-se</a></p>
                 </form>
             </div>
             <div id="register-view" class="hidden">
@@ -32,33 +51,125 @@
                     <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Cadastrar Primeiro Administrador</h2>
                     <div class="mb-4"><label for="register-name" class="block text-sm font-medium text-gray-600">Seu Nome</label><input type="text" id="register-name" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md"></div>
                     <div class="mb-4"><label for="register-email" class="block text-sm font-medium text-gray-600">Email</label><input type="email" id="register-email" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md"></div>
-                    <div class="mb-4"><label for="register-password" class="block text-sm font-medium text-gray-600">Senha</label><input type="password" id="register-password" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md" minlength="8" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Deve conter no mínimo 8 caracteres, com pelo menos uma letra maiúscula, uma minúscula e um número."></div>
-                    <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700">Cadastrar</button>
+                    <div class="mb-4"><label for="register-password" class="block text-sm font-medium text-gray-600">Senha (mínimo 6 caracteres)</label><input type="password" id="register-password" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md"></div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">Cadastrar</button>
                     <p class="text-center text-sm text-gray-500 mt-4">Já tem uma conta? <a href="#" id="show-login-link" class="text-green-600 hover:underline">Faça Login</a></p>
                 </form>
             </div>
-             <p id="auth-feedback" class="text-center text-sm mt-4 h-4"></p>
+             <p id="auth-error" class="text-red-500 text-sm text-center mt-4 h-4"></p>
         </div>
     </div>
     
     <!-- Conteúdo Principal do App -->
     <div id="app-container" class="hidden">
-        <header class="bg-white shadow-md sticky top-0 z-20"></header>
-        <main id="app-content" class="container mx-auto p-4 md:p-8"></main>
-        <footer class="text-center mt-10 pb-4 text-xs text-gray-500"></footer>
+        <header class="bg-white shadow-md sticky top-0 z-20">
+            <div class="container mx-auto px-4 py-3">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3"><svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg><span class="text-xl font-bold text-gray-700">SUAS App</span></div>
+                    <nav id="main-nav" class="flex gap-2 bg-gray-200 p-1 rounded-lg"></nav>
+                    <div><button id="logout-btn" class="text-sm font-semibold text-red-600 hover:text-red-800 transition-colors">Sair</button></div>
+                </div>
+            </div>
+        </header>
+
+        <main id="app-content" class="container mx-auto p-4 md:p-8">
+            <!-- PÁGINA DE REGISTRO -->
+            <div id="page-registro" class="fade-in">
+                 <div class="bg-white p-4 rounded-xl shadow-lg mb-8">
+                    <div class="flex items-center gap-2 border-b-2 border-transparent focus-within:border-green-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                        <input type="text" id="search-input" placeholder="Buscar por nome da família..." class="w-full p-2 border-0 focus:ring-0">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Novo Atendimento</h2>
+                        <form id="form-atendimento" class="space-y-4">
+                            <div><label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input name="nomeFamilia" type="text" id="nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
+                            <div><label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input name="dataAtendimento" type="date" id="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></div>
+                            <div><label for="tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select name="tipoServico" id="tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"><option value="">Selecione...</option><option value="Acompanhamento Familiar">Acompanhamento Familiar</option><option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option><option value="Orientação Jurídica">Orientação Jurídica</option><option value="Apoio Psicológico">Apoio Psicológico</option><option value="Cadastro Único">Cadastro Único</option><option value="Outro">Outro</option></select></div>
+                            <div><label for="observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea name="observacoes" id="observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></textarea></div>
+                            <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-md hover:shadow-lg">Salvar Atendimento</button>
+                        </form>
+                    </div>
+                    <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Histórico de Atendimentos</h2>
+                        <div id="lista-atendimentos" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PÁGINA DO DASHBOARD GERENCIAL -->
+            <div id="page-dashboard" class="fade-in hidden">
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-xl font-semibold text-gray-700 mb-4">Evolução dos Atendimentos</h3><div id="chart-container-monthly" class="relative h-80"><canvas id="atendimentosPorMesChart"></canvas></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-xl font-semibold text-gray-700 mb-4">Distribuição de Serviços</h3><div id="chart-container-services" class="relative h-80 flex justify-center items-center"><canvas id="atendimentosPorServicoChart"></canvas></div></div>
+                 </div>
+                 <div class="mt-8 bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Relatório Avançado de Atendimentos</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                        <div><label for="report-start-date" class="block text-sm font-medium text-gray-600">Data de Início</label><input type="date" id="report-start-date" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm"></div>
+                        <div><label for="report-end-date" class="block text-sm font-medium text-gray-600">Data de Fim</label><input type="date" id="report-end-date" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm"></div>
+                        <div><label for="report-service-filter" class="block text-sm font-medium text-gray-600">Filtrar por Serviço</label><select id="report-service-filter" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm"></select></div>
+                        <div class="sm:col-span-3 text-right"><button id="export-excel-btn" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-md">Exportar para Excel (.xlsx)</button></div>
+                    </div>
+                 </div>
+            </div>
+
+            <!-- PÁGINA DE ADMINISTRAÇÃO -->
+            <div id="page-admin" class="fade-in hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Cadastrar Novo Usuário</h2>
+                        <form id="add-user-form" class="space-y-4">
+                            <div><label for="new-user-name" class="block text-sm font-medium text-gray-600">Nome do Profissional</label><input type="text" id="new-user-name" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div>
+                            <div><label for="new-user-email" class="block text-sm font-medium text-gray-600">Email</label><input type="email" id="new-user-email" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div>
+                            <div><label for="new-user-password" class="block text-sm font-medium text-gray-600">Senha Provisória</label><input type="password" id="new-user-password" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div>
+                            <div><label for="new-user-role" class="block text-sm font-medium text-gray-600">Função</label><select id="new-user-role" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"><option value="user">Assistente Social</option><option value="psychologist">Psicólogo</option><option value="technician">Nível Médio</option><option value="intern">Estagiário</option><option value="admin">Administrador</option></select></div>
+                            <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700">Cadastrar Usuário</button>
+                        </form>
+                         <p id="admin-feedback" class="text-sm text-center mt-4 h-4"></p>
+                    </div>
+                    <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Usuários Cadastrados</h2>
+                        <div id="users-list" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="text-center mt-10 pb-4 text-xs text-gray-500">
+            <p>Usuário: <span id="user-email-display-footer" class="font-mono">N/A</span> | Versão 1.04</p>
+        </footer>
     </div>
     
-    <!-- Modais -->
-    <div id="history-modal-backdrop" class="modal-backdrop fixed inset-0 z-40 hidden items-center justify-center p-4"></div>
+    <!-- MODAL DE EDIÇÃO -->
+    <div id="edit-modal-backdrop" class="fixed inset-0 z-30 hidden items-center justify-center p-4">
+        <div id="edit-modal" class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg transform transition-all -translate-y-10 opacity-0">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-700">Editar Atendimento</h2>
+                <button id="close-modal-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-800">&times;</button>
+            </div>
+            <form id="edit-form" class="space-y-4">
+                <input type="hidden" id="edit-id">
+                <div><label for="edit-nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input type="text" id="edit-nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div>
+                <div><label for="edit-dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input type="date" id="edit-dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div>
+                <div><label for="edit-tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select id="edit-tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"><option value="Acompanhamento Familiar">Acompanhamento Familiar</option><option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option><option value="Orientação Jurídica">Orientação Jurídica</option><option value="Apoio Psicológico">Apoio Psicológico</option><option value="Cadastro Único">Cadastro Único</option><option value="Outro">Outro</option></select></div>
+                <div><label for="edit-observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea id="edit-observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></textarea></div>
+                <div class="flex gap-4"><button type="button" id="cancel-edit-btn" class="w-full bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-300">Cancelar</button><button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700">Salvar Alterações</button></div>
+            </form>
+        </div>
+    </div>
+
 
     <script type="module">
         // Importações do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, deleteDoc, serverTimestamp, setDoc, getDoc, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, deleteDoc, serverTimestamp, setDoc, getDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
         
-        // Configuração
+        // Configuração do Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyA23XFm_O2ZUJQU_BePuSYwBqv-2tEol08",
   authDomain: "sra-suas.firebaseapp.com",
@@ -68,203 +179,377 @@ const firebaseConfig = {
   appId: "1:822160886742:web:f7a4400e8e11e1fbabb277",
   measurementId: "G-5X706VZFZG"
 };
+
+        // Inicialização
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const functions = getFunctions(app, 'us-central1');
-
-        // Estado Global
-        let currentUser = null, userProfile = null, allAttendances = [], unsubscribeAttendances = null, unsubscribeUsers = null, monthlyChart = null, servicesChart = null, allUsers = [];
+        const functions = getFunctions(app, 'us-central1'); // Especifica a região se necessário
         
-        // Seletores da UI
+        // Estado Global
+        let currentUser = null;
+        let userProfile = null;
+        let allAttendances = [];
+        let unsubscribeAttendances = null;
+        let unsubscribeUsers = null;
+        let monthlyChart = null;
+        let servicesChart = null;
+
+        // --- Seletores de Elementos da UI ---
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app-container');
-        const authFeedback = document.getElementById('auth-feedback');
-        const registerLinkContainer = document.getElementById('register-link-container');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const authError = document.getElementById('auth-error');
+        const showRegisterLink = document.getElementById('show-register-link');
+        const showLoginLink = document.getElementById('show-login-link');
+        const loginView = document.getElementById('login-view');
+        const registerView = document.getElementById('register-view');
+        const mainNav = document.getElementById('main-nav');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userEmailDisplayFooter = document.getElementById('user-email-display-footer');
+        const searchInput = document.getElementById('search-input');
+        const attendanceListContainer = document.getElementById('lista-atendimentos');
+        const newAttendanceForm = document.getElementById('form-atendimento');
+        const editModalBackdrop = document.getElementById('edit-modal-backdrop');
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-form');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const addUserForm = document.getElementById('add-user-form');
+        const usersListContainer = document.getElementById('users-list');
+        const adminFeedback = document.getElementById('admin-feedback');
+        const exportExcelBtn = document.getElementById('export-excel-btn');
+        const dataAtendimentoInputForm = document.getElementById('dataAtendimento');
 
-        // Lógica de Autenticação
-        document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); authFeedback.textContent = ''; signInWithEmailAndPassword(auth, e.target['login-email'].value, e.target['login-password'].value).catch(err => { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Email ou senha inválidos."; }); });
-        document.getElementById('register-form').addEventListener('submit', async (e) => { e.preventDefault(); authFeedback.textContent = ''; const { name, email, password } = Object.fromEntries(new FormData(e.target)); try { const cred = await createUserWithEmailAndPassword(auth, email, password); await setDoc(doc(db, "users", cred.user.uid), { name, email, role: 'admin', createdAt: serverTimestamp(), disabled: false }); } catch (err) { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Erro ao cadastrar."; } });
-        document.getElementById('show-register-link').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('login-view').classList.add('hidden'); document.getElementById('register-view').classList.remove('hidden'); });
-        document.getElementById('show-login-link').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('register-view').classList.add('hidden'); document.getElementById('login-view').classList.remove('hidden'); });
-        document.getElementById('forgot-password-link').addEventListener('click', (e) => { e.preventDefault(); const email = prompt("Por favor, digite seu email para redefinir a senha:"); if (email) { sendPasswordResetEmail(auth, email).then(() => { authFeedback.className = 'text-green-600 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Email de redefinição enviado!"; }).catch(err => { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Erro ao enviar email."; }); } });
-
-        async function checkAdminExists() { const adminQuery = query(collection(db, "users"), where("role", "==", "admin")); const snapshot = await getDocs(adminQuery); registerLinkContainer.style.display = snapshot.empty ? 'inline' : 'none'; }
+        // --- Lógica de Autenticação ---
         
+        showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); loginView.classList.add('hidden'); registerView.classList.remove('hidden'); });
+        showLoginLink.addEventListener('click', (e) => { e.preventDefault(); registerView.classList.add('hidden'); loginView.classList.remove('hidden'); });
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            authError.textContent = '';
+            const email = loginForm['login-email'].value;
+            const password = loginForm['login-password'].value;
+            signInWithEmailAndPassword(auth, email, password)
+                .catch(error => { authError.textContent = "Email ou senha inválidos."; console.error("Erro de login:", error.message); });
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            authError.textContent = '';
+            const name = registerForm['register-name'].value;
+            const email = registerForm['register-email'].value;
+            const password = registerForm['register-password'].value;
+            
+            const usersQuery = query(collection(db, "users"), where("role", "==", "admin"));
+            const adminSnapshot = await getDocs(usersQuery);
+
+            if (!adminSnapshot.empty) {
+                authError.textContent = "O registro de administrador já foi feito.";
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                await setDoc(doc(db, "users", user.uid), { name, email, role: 'admin', createdAt: serverTimestamp() });
+            } catch (error) {
+                authError.textContent = "Erro ao cadastrar. Verifique os dados."; console.error("Erro de registro:", error.message);
+            }
+        });
+        
+        logoutBtn.addEventListener('click', () => { signOut(auth); });
+
+        // --- Listener de Autenticação Principal ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
                 await fetchUserProfile(user.uid);
-                if (userProfile && userProfile.disabled) {
-                    authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4';
-                    authFeedback.textContent = 'Sua conta está desativada. Contate o administrador.';
-                    await signOut(auth);
-                    return;
-                }
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
-                renderAppLayout();
+                userEmailDisplayFooter.textContent = user.email;
                 setupNavigation();
-                listenForData();
+                listenForAttendances();
+                if (userProfile?.role === 'admin') {
+                    listenForUsers();
+                }
             } else {
-                currentUser = null; userProfile = null;
-                if (unsubscribeAttendances) unsubscribeAttendances(); if (unsubscribeUsers) unsubscribeUsers();
+                currentUser = null;
+                userProfile = null;
+                if (unsubscribeAttendances) unsubscribeAttendances();
+                if (unsubscribeUsers) unsubscribeUsers();
                 authContainer.classList.remove('hidden');
                 appContainer.classList.add('hidden');
-                checkAdminExists();
             }
         });
         
-        async function fetchUserProfile(uid) { const docRef = doc(db, "users", uid); const docSnap = await getDoc(docRef); userProfile = docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null; }
-
-        function renderAppLayout() {
-            appContainer.querySelector('header').innerHTML = `<div class="container mx-auto px-4 py-3"><div class="flex justify-between items-center"><div class="flex items-center gap-3"><svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg><span class="text-xl font-bold text-gray-700">SUAS App</span></div><nav id="main-nav" class="flex gap-2 bg-gray-200 p-1 rounded-lg"></nav><div><button id="logout-btn" class="text-sm font-semibold text-red-600 hover:text-red-800">Sair</button></div></div></div>`;
-            appContainer.querySelector('main').innerHTML = `<div id="page-novo-atendimento" class="fade-in hidden"></div><div id="page-meus-atendimentos" class="fade-in hidden"></div><div id="page-encaminhados" class="fade-in hidden"></div><div id="page-dashboard" class="fade-in hidden"></div><div id="page-admin" class="fade-in hidden"></div><div id="page-todos-atendimentos" class="fade-in hidden"></div>`;
-            appContainer.querySelector('footer').innerHTML = `<p>Usuário: <span class="font-mono">${currentUser.email}</span> | Versão 1.06</p>`;
-            document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+        // --- Funções de Perfil e Navegação ---
+        async function fetchUserProfile(uid) {
+            const userDocRef = doc(db, "users", uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                userProfile = { id: userDoc.id, ...userDoc.data() };
+                const tokenResult = await currentUser.getIdTokenResult(true);
+                userProfile.role = tokenResult.claims.role || userProfile.role;
+            } else {
+                userProfile = null;
+            }
         }
 
         function setupNavigation() {
-            const mainNav = document.getElementById('main-nav');
-            if(!mainNav) return;
             mainNav.innerHTML = '';
-            
-            const rolesVisibility = {'page-novo-atendimento': ['admin','user','psychologist','technician','intern'],'page-meus-atendimentos': ['admin','user','psychologist','technician','intern'],'page-encaminhados': ['admin','user','psychologist','technician','intern'],'page-todos-atendimentos': ['admin'],'page-dashboard': ['admin'],'page-admin': ['admin']};
-            const pages = {'page-novo-atendimento':'Novo Atendimento','page-meus-atendimentos':'Meus Atendimentos','page-encaminhados':'Encaminhados','page-todos-atendimentos':'Todos Atendimentos','page-dashboard':'Dashboard','page-admin':'Administração'};
-            
+            const pages = { 'page-registro': 'Registro', 'page-dashboard': 'Dashboard', 'page-admin': 'Administração' };
+            const rolesVisibility = {
+                'page-registro': ['admin', 'user', 'psychologist', 'technician', 'intern'],
+                'page-dashboard': ['admin', 'user', 'psychologist', 'technician', 'intern'],
+                'page-admin': ['admin']
+            };
             const visiblePages = Object.keys(pages).filter(pageId => rolesVisibility[pageId].includes(userProfile?.role));
             
             visiblePages.forEach((pageId) => {
                 const button = document.createElement('button');
                 button.textContent = pages[pageId];
-                button.className = 'nav-button px-3 py-1.5 text-sm font-semibold rounded-md';
-                button.addEventListener('click', () => { mainNav.querySelectorAll('button').forEach(b => b.classList.remove('active')); button.classList.add('active'); Object.keys(pages).forEach(pId => { const el = document.getElementById(pId); if(el) el.classList.add('hidden'); }); document.getElementById(pageId).classList.remove('hidden'); });
+                button.className = 'nav-button px-4 py-1.5 text-sm font-semibold rounded-md';
+                button.addEventListener('click', () => {
+                    mainNav.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    Object.keys(pages).forEach(pId => document.getElementById(pId)?.classList.add('hidden'));
+                    document.getElementById(pageId).classList.remove('hidden');
+                });
                 mainNav.appendChild(button);
             });
             
             const firstButton = mainNav.querySelector('button');
-            if (firstButton) { firstButton.classList.add('active'); document.getElementById(visiblePages[0]).classList.remove('hidden'); }
-        }
-        
-        function listenForData() {
-            if (unsubscribeAttendances) unsubscribeAttendances();
-            unsubscribeAttendances = onSnapshot(query(collection(db, "atendimentos"), orderBy("dataAtendimento", "desc")), snapshot => { allAttendances = snapshot.docs.map(d => ({id: d.id, ...d.data()})); renderAllPages(); });
-            if (userProfile?.role === 'admin') {
-                if (unsubscribeUsers) unsubscribeUsers();
-                unsubscribeUsers = onSnapshot(query(collection(db, "users"), orderBy("name")), snapshot => { allUsers = snapshot.docs.map(d => ({id: d.id, ...d.data()})); renderAllPages(); });
-            } else {
-                allUsers = []; // Usuários não-admin não precisam da lista completa.
+            if (firstButton) {
+                firstButton.classList.add('active');
+                const firstPageId = visiblePages[0];
+                Object.keys(pages).forEach(pId => document.getElementById(pId)?.classList.add('hidden'));
+                document.getElementById(firstPageId).classList.remove('hidden');
             }
         }
-        
-        function renderAllPages() {
-            const myAttendances = allAttendances.filter(at => at.autorId === currentUser.uid);
-            const referredAttendances = allAttendances.filter(at => at.encaminhadoPara === currentUser.uid);
 
-            renderPage('page-novo-atendimento', renderNewAttendancePage);
-            renderPage('page-meus-atendimentos', renderAttendanceListPage, myAttendances, "Seus Atendimentos");
-            renderPage('page-encaminhados', renderAttendanceListPage, referredAttendances, "Encaminhados para Você");
-            if (userProfile?.role === 'admin') {
-                renderPage('page-todos-atendimentos', renderAttendanceListPage, allAttendances, "Todos os Atendimentos da Instituição");
-                renderPage('page-dashboard', renderDashboardPage, allAttendances);
-                renderPage('page-admin', renderAdminPage, allUsers);
+        // --- Lógica de Atendimentos (CRUD + Busca) ---
+        function listenForAttendances() {
+             if (unsubscribeAttendances) unsubscribeAttendances();
+             const q = query(collection(db, "atendimentos"), orderBy("dataAtendimento", "desc"));
+             unsubscribeAttendances = onSnapshot(q, snapshot => {
+                allAttendances = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                renderAttendanceList(allAttendances);
+                updateDashboard(allAttendances);
+             });
+        }
+        
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredAttendances = allAttendances.filter(at => 
+                at.nomeFamilia.toLowerCase().includes(searchTerm)
+            );
+            renderAttendanceList(filteredAttendances);
+        });
+
+        function renderAttendanceList(attendances) {
+            attendanceListContainer.innerHTML = '';
+            if (attendances.length === 0) {
+                attendanceListContainer.innerHTML = `<div class="text-center text-gray-500 p-8 border-2 border-dashed rounded-lg">Nenhum atendimento encontrado.</div>`;
+                return;
             }
+            attendances.forEach(at => {
+                if (!at.dataAtendimento || typeof at.dataAtendimento.toDate !== 'function') return;
+                const dataFormatada = at.dataAtendimento.toDate().toLocaleDateString('pt-BR');
+                const div = document.createElement('div');
+                div.className = 'p-4 border rounded-xl shadow-sm bg-gray-50 hover:shadow-md transition-all duration-300 cursor-pointer';
+                div.innerHTML = `<div><p class="font-bold text-lg text-green-800">${at.nomeFamilia}</p><p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Serviço:</span> ${at.tipoServico}</p><p class="text-sm text-gray-600"><span class="font-semibold text-gray-700">Data:</span> ${dataFormatada}</p></div>`;
+                div.addEventListener('click', () => openEditModal(at));
+                attendanceListContainer.appendChild(div);
+            });
         }
         
-        function renderPage(pageId, renderFn, ...args) { const page = document.getElementById(pageId); if (page && !page.classList.contains('hidden')) { page.innerHTML = ''; renderFn(page, ...args); } }
+        newAttendanceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            await addDoc(collection(db, "atendimentos"), {
+                ...data,
+                dataAtendimento: new Date(data.dataAtendimento + 'T00:00:00-03:00'),
+                criadoEm: serverTimestamp(),
+                autorId: currentUser.uid,
+                autorEmail: currentUser.email
+            });
+            e.target.reset();
+            dataAtendimentoInputForm.valueAsDate = new Date();
+        });
         
-        function renderNewAttendancePage(container) {
-            container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-lg max-w-lg mx-auto"><h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Novo Atendimento</h2><form id="new-attendance-form" class="space-y-4"><div><label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input name="nomeFamilia" type="text" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div><div><label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input name="dataAtendimento" type="date" id="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div><div><label for="tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select name="tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"><option value="">Selecione...</option><option value="Acompanhamento Familiar">Acompanhamento Familiar</option><option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option><option value="Orientação Jurídica">Orientação Jurídica</option><option value="Apoio Psicológico">Apoio Psicológico</option><option value="Cadastro Único">Cadastro Único</option><option value="Outro">Outro</option></select></div><div><label for="observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea name="observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></textarea></div><button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700">Salvar Atendimento</button></form></div>`;
-            document.getElementById('dataAtendimento').valueAsDate = new Date();
-            document.getElementById('new-attendance-form').addEventListener('submit', async (e) => { e.preventDefault(); const formData = new FormData(e.target); const data = Object.fromEntries(formData.entries()); await addDoc(collection(db, "atendimentos"), { ...data, dataAtendimento: new Date(data.dataAtendimento + 'T00:00:00-03:00'), criadoEm: serverTimestamp(), autorId: currentUser.uid, autorEmail: currentUser.email, historico: [{ acao: 'Criação', data: serverTimestamp(), autorEmail: currentUser.email, texto: `Atendimento inicial criado.` }] }); e.target.reset(); document.getElementById('dataAtendimento').valueAsDate = new Date(); alert('Atendimento salvo com sucesso!'); });
+        function openEditModal(atendimento) {
+            editForm.reset();
+            editForm['edit-id'].value = atendimento.id;
+            editForm['edit-nomeFamilia'].value = atendimento.nomeFamilia;
+            editForm['edit-dataAtendimento'].value = atendimento.dataAtendimento.toDate().toISOString().split('T')[0];
+            editForm['edit-tipoServico'].value = atendimento.tipoServico;
+            editForm['edit-observacoes'].value = atendimento.observacoes;
+            editModalBackdrop.classList.remove('hidden');
+            editModalBackdrop.classList.add('flex');
+            setTimeout(() => { editModal.classList.remove('-translate-y-10', 'opacity-0'); }, 10);
+        }
+
+        function closeEditModal() {
+            editModal.classList.add('-translate-y-10', 'opacity-0');
+            setTimeout(() => { editModalBackdrop.classList.add('hidden'); editModalBackdrop.classList.remove('flex'); }, 300);
+        }
+
+        closeModalBtn.addEventListener('click', closeEditModal);
+        cancelEditBtn.addEventListener('click', closeEditModal);
+        editModalBackdrop.addEventListener('click', (e) => { if (e.target === editModalBackdrop) closeEditModal(); });
+
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = editForm['edit-id'].value;
+            await updateDoc(doc(db, "atendimentos", id), {
+                nomeFamilia: editForm['edit-nomeFamilia'].value,
+                dataAtendimento: new Date(editForm['edit-dataAtendimento'].value + 'T00:00:00-03:00'),
+                tipoServico: editForm['edit-tipoServico'].value,
+                observacoes: editForm['edit-observacoes'].value,
+            });
+            closeEditModal();
+        });
+
+        // --- Lógica da Página de Administração ---
+        function listenForUsers() {
+             if (unsubscribeUsers) unsubscribeUsers();
+             const q = query(collection(db, "users"), orderBy("name"));
+             unsubscribeUsers = onSnapshot(q, snapshot => {
+                const users = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                renderUsersList(users);
+             });
         }
         
-        function renderAttendanceListPage(container, attendances, title) {
-            container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-lg"><div class="flex justify-between items-center mb-6 border-b pb-3"><h2 class="text-2xl font-semibold text-gray-700">${title}</h2><div class="relative w-1/3"><input type="text" id="list-search-${title.replace(/\s+/g, '')}" placeholder="Buscar por nome..." class="w-full p-2 pl-8 border rounded-md bg-gray-50"><svg class="absolute left-2 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg></div></div><div id="list-container" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2"></div></div>`;
-            const listContainer = container.querySelector('#list-container');
-            const searchInput = container.querySelector(`#list-search-${title.replace(/\s+/g, '')}`);
-            const renderList = (data) => {
-                listContainer.innerHTML = '';
-                if (data.length === 0) { listContainer.innerHTML = `<div class="text-center text-gray-500 p-8 border-2 border-dashed rounded-lg">Nenhum atendimento para exibir.</div>`; return; }
-                data.forEach(at => { if (!at.dataAtendimento?.toDate) return; const dataFormatada = at.dataAtendimento.toDate().toLocaleDateString('pt-BR'); const div = document.createElement('div'); div.className = 'p-4 border rounded-xl shadow-sm bg-gray-50 hover:shadow-md transition-all duration-300 cursor-pointer'; div.innerHTML = `<div><p class="font-bold text-lg text-green-800">${at.nomeFamilia}</p><p class="text-sm text-gray-600"><span class="font-semibold">Serviço:</span> ${at.tipoServico}</p><p class="text-sm text-gray-600"><span class="font-semibold">Data:</span> ${dataFormatada}</p><p class="text-sm text-gray-500 mt-1">Autor: ${at.autorEmail}</p>${at.encaminhadoPara ? `<p class="text-sm text-blue-500 mt-1 font-semibold">Encaminhado para: ${allUsers.find(u => u.id === at.encaminhadoPara)?.name || at.encaminhadoParaEmail}</p>` : ''}</div>`; div.addEventListener('click', () => showHistoryModal(at)); listContainer.appendChild(div); });
-            };
-            searchInput.addEventListener('input', (e) => { const term = e.target.value.toLowerCase(); renderList(attendances.filter(at => at.nomeFamilia.toLowerCase().includes(term))); });
-            renderList(attendances);
+        function renderUsersList(users) {
+            usersListContainer.innerHTML = '';
+            users.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
+                div.innerHTML = `<div><p class="font-semibold text-gray-800">${user.name}</p><p class="text-sm text-gray-500">${user.email} - <span class="capitalize font-medium">${user.role}</span></p></div>
+                    ${user.id !== currentUser.uid ? `<button data-id="${user.id}" class="btn-delete-user text-red-500 hover:text-red-700 text-xs font-semibold">REMOVER</button>` : ''}`;
+                usersListContainer.appendChild(div);
+            });
         }
+
+        addUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = addUserForm.querySelector('button');
+            btn.disabled = true;
+            adminFeedback.textContent = 'Processando...';
+            adminFeedback.className = 'text-blue-600 text-sm text-center mt-4 h-4';
+            
+            const name = addUserForm['new-user-name'].value;
+            const email = addUserForm['new-user-email'].value;
+            const password = addUserForm['new-user-password'].value;
+            const role = addUserForm['new-user-role'].value;
+
+            const createNewUser = httpsCallable(functions, 'createNewUser');
+            
+            try {
+                const result = await createNewUser({ name, email, password, role });
+                adminFeedback.textContent = result.data.result;
+                adminFeedback.className = 'text-green-600 text-sm text-center mt-4 h-4';
+                addUserForm.reset();
+            } catch (error) {
+                console.error("Erro ao chamar Cloud Function:", error);
+                adminFeedback.textContent = error.message;
+                adminFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4';
+            } finally {
+                btn.disabled = false;
+            }
+        });
         
-        function renderDashboardPage(container, attendances) {
-             container.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-xl font-semibold text-gray-700 mb-4">Evolução dos Atendimentos</h3><div id="chart-container-monthly" class="relative h-80"><canvas id="atendimentosPorMesChart"></canvas></div></div><div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-xl font-semibold text-gray-700 mb-4">Distribuição de Serviços</h3><div id="chart-container-services" class="relative h-80 flex justify-center items-center"><canvas id="atendimentosPorServicoChart"></canvas></div></div></div><div class="mt-8 bg-white p-6 rounded-xl shadow-lg"><h3 class="text-xl font-semibold text-gray-700 mb-4">Relatório Avançado de Atendimentos</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end"><div><label for="report-start-date" class="block text-sm font-medium text-gray-600">Data de Início</label><input type="date" id="report-start-date" class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md shadow-sm"></div><div><label for="report-end-date" class="block text-sm font-medium text-gray-600">Data de Fim</label><input type="date" id="report-end-date" class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md shadow-sm"></div><div><label for="report-service-filter" class="block text-sm font-medium text-gray-600">Filtrar por Serviço</label><select id="report-service-filter" class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md shadow-sm"></select></div><div class="sm:col-span-3 text-right"><button id="export-excel-btn" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-md">Exportar para Excel (.xlsx)</button></div></div></div>`;
-             
+        // --- Lógica de Dashboard e Relatórios ---
+        function updateDashboard(attendances) {
              const serviceFilter = document.getElementById('report-service-filter');
              const services = [...new Set(attendances.map(at => at.tipoServico))].sort();
+             const currentFilterValue = serviceFilter.value;
              serviceFilter.innerHTML = '<option value="todos">Todos os Serviços</option>';
-             services.forEach(s => { const option = document.createElement('option'); option.value = s; option.textContent = s; serviceFilter.appendChild(option); });
-
-             document.getElementById('export-excel-btn').addEventListener('click', () => {
-                const startDateEl = document.getElementById('report-start-date'); const endDateEl = document.getElementById('report-end-date'); const service = serviceFilter.value;
-                const filteredData = attendances.filter(at => { if(!at.dataAtendimento?.toDate) return false; const atDate = at.dataAtendimento.toDate(); const isAfterStart = !startDateEl.value || atDate >= new Date(startDateEl.value + 'T00:00:00-03:00'); const isBeforeEnd = !endDateEl.value || atDate <= new Date(endDateEl.value + 'T23:59:59-03:00'); const isCorrectService = service === 'todos' || at.tipoServico === service; return isAfterStart && isBeforeEnd && isCorrectService; });
-                if (filteredData.length === 0) { alert('Nenhum dado encontrado para os filtros selecionados.'); return; }
-                const dataToExport = filteredData.map(at => ({ 'Nome da Família': at.nomeFamilia, 'Data do Atendimento': at.dataAtendimento.toDate().toLocaleDateString('pt-BR'), 'Tipo de Serviço': at.tipoServico, 'Observações': at.observacoes, 'Profissional Autor': at.autorEmail, 'Encaminhado Para': allUsers.find(u => u.id === at.encaminhadoPara)?.name || '' }));
-                const worksheet = XLSX.utils.json_to_sheet(dataToExport); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "Atendimentos"); XLSX.writeFile(workbook, `Relatorio_Atendimentos_${new Date().toISOString().slice(0,10)}.xlsx`);
+             services.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s; option.textContent = s; serviceFilter.appendChild(option);
              });
-
-             // Lógica dos Gráficos
-             if(monthlyChart) monthlyChart.destroy(); if(servicesChart) servicesChart.destroy();
-             const monthlyCtx = document.getElementById('atendimentosPorMesChart').getContext('2d');
-             const servicesCtx = document.getElementById('atendimentosPorServicoChart').getContext('2d');
-             if (attendances.length === 0) { monthlyCtx.canvas.parentElement.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Sem dados para exibir.</div>`; servicesCtx.canvas.parentElement.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Sem dados para exibir.</div>`; return; }
-             const monthlyData = attendances.reduce((acc, curr) => { if (!curr.dataAtendimento?.toDate) return acc; const date = curr.dataAtendimento.toDate(); const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; if (!acc[key]) acc[key] = { count: 0, label: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) }; acc[key].count++; return acc; }, {});
-             const sortedKeys = Object.keys(monthlyData).sort(); const monthlyLabels = sortedKeys.map(key => monthlyData[key].label); const monthlyCounts = sortedKeys.map(key => monthlyData[key].count);
-             monthlyChart = new Chart(monthlyCtx, { type: 'line', data: { labels: monthlyLabels, datasets: [{ label: 'Nº de Atendimentos', data: monthlyCounts, borderColor: '#16A34A', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } });
-             const servicesData = attendances.reduce((acc, curr) => { acc[curr.tipoServico] = (acc[curr.tipoServico] || 0) + 1; return acc; }, {});
-             servicesChart = new Chart(servicesCtx, { type: 'doughnut', data: { labels: Object.keys(servicesData), datasets: [{ label: 'Tipos de Serviço', data: Object.values(servicesData), backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#6366F1'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+             serviceFilter.value = currentFilterValue;
+             updateAllCharts(attendances);
         }
         
-        function renderAdminPage(container, users) {
-            container.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-5 gap-8"><div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg"><h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Cadastrar Novo Usuário</h2><form id="add-user-form" class="space-y-4"><div><label for="new-user-name" class="block text-sm font-medium text-gray-600">Nome do Profissional</label><input type="text" id="new-user-name" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div><div><label for="new-user-email" class="block text-sm font-medium text-gray-600">Email</label><input type="email" id="new-user-email" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div><div><label for="new-user-password" class="block text-sm font-medium text-gray-600">Senha Provisória</label><input type="password" id="new-user-password" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md" minlength="8" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Mínimo 8 caracteres, com maiúscula, minúscula e número."></div><div><label for="new-user-role" class="block text-sm font-medium text-gray-600">Função</label><select id="new-user-role" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"><option value="user">Assistente Social</option><option value="psychologist">Psicólogo</option><option value="technician">Nível Médio</option><option value="intern">Estagiário</option><option value="admin">Administrador</option></select></div><button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700">Cadastrar Usuário</button></form><p id="admin-feedback" class="text-sm text-center mt-4 h-4"></p></div><div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg"><h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Usuários Cadastrados</h2><div id="users-list" class="space-y-3 max-h-[60vh] overflow-y-auto"></div></div></div>`;
-            const usersListContainer = container.querySelector('#users-list');
-            usersListContainer.innerHTML = '';
-            users.forEach(user => { const div = document.createElement('div'); div.className = `flex justify-between items-center p-3 rounded-lg ${user.disabled ? 'bg-red-100' : 'bg-gray-50'}`; div.innerHTML = `<div><p class="font-semibold text-gray-800">${user.name} ${user.disabled ? '(Desativado)' : ''}</p><p class="text-sm text-gray-500">${user.email} - <span class="capitalize font-medium">${user.role}</span></p></div> ${user.id !== currentUser.uid ? `<button data-id="${user.id}" data-disabled="${user.disabled}" class="btn-toggle-user text-xs font-semibold ${user.disabled ? 'text-green-600 hover:text-green-800' : 'text-red-500 hover:text-red-700'}">${user.disabled ? 'REATIVAR' : 'DESATIVAR'}</button>` : ''}`; usersListContainer.appendChild(div); });
+        function updateAllCharts(attendances) {
+            const monthlyCtx = document.getElementById('atendimentosPorMesChart').getContext('2d');
+            const servicesCtx = document.getElementById('atendimentosPorServicoChart').getContext('2d');
             
-            container.querySelector('#add-user-form').addEventListener('submit', async (e) => { e.preventDefault(); const btn = e.target.querySelector('button'); btn.disabled = true; const feedback = container.querySelector('#admin-feedback'); feedback.textContent = 'Processando...'; feedback.className = 'text-blue-600 text-sm text-center mt-4 h-4'; const { name, email, password, role } = Object.fromEntries(new FormData(e.target)); const createNewUser = httpsCallable(functions, 'createNewUser'); try { const result = await createNewUser({ name, email, password, role }); feedback.textContent = result.data.result; feedback.className = 'text-green-600 text-sm text-center mt-4 h-4'; e.target.reset(); } catch (error) { feedback.textContent = error.message; feedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; } finally { btn.disabled = false; } });
-            container.querySelectorAll('.btn-toggle-user').forEach(btn => btn.addEventListener('click', async (e) => { const userId = e.target.dataset.id; const isDisabled = e.target.dataset.disabled === 'true'; if (confirm(`Tem certeza que deseja ${isDisabled ? 'reativar' : 'desativar'} este usuário?`)) { await updateDoc(doc(db, 'users', userId), { disabled: !isDisabled }); } }));
+            if (attendances.length === 0) {
+                 showChartMessage(monthlyCtx.canvas.parentElement, 'Sem dados para exibir.');
+                 showChartMessage(servicesCtx.canvas.parentElement, 'Sem dados para exibir.');
+                return;
+            }
+            
+            hideChartMessage(monthlyCtx.canvas.parentElement);
+            hideChartMessage(servicesCtx.canvas.parentElement);
+
+            const monthlyData = attendances.reduce((acc, curr) => {
+                if (!curr.dataAtendimento?.toDate) return acc;
+                const date = curr.dataAtendimento.toDate();
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                if (!acc[key]) acc[key] = { count: 0, label: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) };
+                acc[key].count++;
+                return acc;
+            }, {});
+            const sortedKeys = Object.keys(monthlyData).sort();
+            const monthlyLabels = sortedKeys.map(key => monthlyData[key].label);
+            const monthlyCounts = sortedKeys.map(key => monthlyData[key].count);
+
+            const servicesData = attendances.reduce((acc, curr) => {
+                acc[curr.tipoServico] = (acc[curr.tipoServico] || 0) + 1;
+                return acc;
+            }, {});
+
+            if(monthlyChart) monthlyChart.destroy();
+            monthlyChart = new Chart(monthlyCtx, { type: 'line', data: { labels: monthlyLabels, datasets: [{ label: 'Nº de Atendimentos', data: monthlyCounts, borderColor: '#16A34A', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } });
+
+            if(servicesChart) servicesChart.destroy();
+            servicesChart = new Chart(servicesCtx, { type: 'doughnut', data: { labels: Object.keys(servicesData), datasets: [{ label: 'Tipos de Serviço', data: Object.values(servicesData), backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#6366F1'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+        }
+        
+        function showChartMessage(container, message) {
+            container.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">${message}</div>`;
+        }
+        function hideChartMessage(container) {
+             if(container.querySelector('canvas')) return;
+             container.innerHTML = `<canvas id="${container.id.replace('container-', '')+'Chart'}"></canvas>`;
         }
 
-        function showHistoryModal(atendimentoId) {
-            const atendimento = allAttendances.find(at => at.id === atendimentoId);
-            if (!atendimento) return;
-            const historyModalBackdrop = document.getElementById('history-modal-backdrop');
-            historyModalBackdrop.innerHTML = `<div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl transform transition-all -translate-y-10 opacity-0 max-h-[90vh] flex flex-col"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-700">Histórico: ${atendimento.nomeFamilia}</h2><button id="close-history-modal-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-800">&times;</button></div><div class="overflow-y-auto flex-grow pr-4 space-y-4"></div><div class="mt-6 pt-4 border-t"><h3 class="text-lg font-semibold mb-2">Encaminhar Atendimento</h3><div class="flex items-center gap-2"><select id="referral-select" class="flex-grow p-2 border rounded-md bg-gray-50"></select><button id="referral-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Encaminhar</button></div></div></div>`;
+        exportExcelBtn.addEventListener('click', () => {
+            const startDateEl = document.getElementById('report-start-date');
+            const endDateEl = document.getElementById('report-end-date');
+            const service = document.getElementById('report-service-filter').value;
             
-            const historyContainer = historyModalBackdrop.querySelector('.overflow-y-auto');
-            atendimento.historico?.sort((a,b) => b.data.seconds - a.data.seconds).forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'p-3 bg-gray-100 rounded-lg';
-                div.innerHTML = `<p class="font-semibold text-gray-800">${item.acao}</p><p class="text-sm">${item.texto}</p><p class="text-xs text-gray-500 mt-1">${item.data.toDate().toLocaleString('pt-BR')} por ${item.autorEmail}</p>`;
-                historyContainer.appendChild(div);
+            const filteredData = allAttendances.filter(at => {
+                if(!at.dataAtendimento?.toDate) return false;
+                const atDate = at.dataAtendimento.toDate();
+                const isAfterStart = !startDateEl.value || atDate >= new Date(startDateEl.value + 'T00:00:00-03:00');
+                const isBeforeEnd = !endDateEl.value || atDate <= new Date(endDateEl.value + 'T23:59:59-03:00');
+                const isCorrectService = service === 'todos' || at.tipoServico === service;
+                return isAfterStart && isBeforeEnd && isCorrectService;
             });
 
-            const referralSelect = historyModalBackdrop.querySelector('#referral-select');
-            allUsers.filter(u => u.id !== currentUser.uid && !u.disabled).forEach(user => { const opt = document.createElement('option'); opt.value = user.id; opt.textContent = `${user.name} (${user.role})`; referralSelect.add(opt); });
+            if (filteredData.length === 0) { alert('Nenhum dado encontrado para os filtros selecionados.'); return; }
 
-            historyModalBackdrop.querySelector('#referral-btn').addEventListener('click', async () => {
-                const selectedUserId = referralSelect.value;
-                if (!selectedUserId) { alert('Selecione um profissional.'); return; }
-                const selectedUser = allUsers.find(u => u.id === selectedUserId);
-                const newHistoryEntry = { acao: 'Encaminhamento', data: serverTimestamp(), autorEmail: currentUser.email, texto: `Encaminhado para ${selectedUser.name}.` };
-                await updateDoc(doc(db, "atendimentos", atendimentoId), { encaminhadoPara: selectedUserId, encaminhadoParaEmail: selectedUser.email, historico: arrayUnion(newHistoryEntry) });
-                alert('Atendimento encaminhado com sucesso!');
-                closeHistoryModal();
-            });
+            const dataToExport = filteredData.map(at => ({
+                'Nome da Família': at.nomeFamilia, 'Data do Atendimento': at.dataAtendimento.toDate().toLocaleDateString('pt-BR'),
+                'Tipo de Serviço': at.tipoServico, 'Observações': at.observacoes, 'Profissional': at.autorEmail
+            }));
 
-            historyModalBackdrop.classList.remove('hidden'); historyModalBackdrop.classList.add('flex');
-            setTimeout(() => { historyModalBackdrop.querySelector('.modal-content').classList.remove('-translate-y-10', 'opacity-0'); }, 10);
-            
-            historyModalBackdrop.querySelector('#close-history-modal-btn').addEventListener('click', closeHistoryModal);
-            historyModalBackdrop.addEventListener('click', e => { if(e.target === historyModalBackdrop) closeHistoryModal(); });
-        }
-        function closeHistoryModal() { const modal = document.getElementById('history-modal-backdrop'); modal.querySelector('.modal-content').classList.add('-translate-y-10', 'opacity-0'); setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300); }
-
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Atendimentos");
+            XLSX.writeFile(workbook, `Relatorio_Atendimentos_${new Date().toISOString().slice(0,10)}.xlsx`);
+        });
+        
+        dataAtendimentoInputForm.valueAsDate = new Date();
     </script>
 </body>
 </html>

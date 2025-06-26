@@ -1,4 +1,4 @@
-const CACHE_NAME = 'atendimentos-cache-v9'; // Versão incrementada para forçar a atualização
+const CACHE_NAME = 'atendimentos-cache-v10'; // Versão incrementada para forçar a atualização
 const REPO_NAME = '/app-assistencia-social'; 
 
 const urlsToCache = [

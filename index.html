@@ -6,25 +6,49 @@
     <title>SUAS App - Gestão de Atendimentos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Biblioteca de Gráficos Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Biblioteca para exportar para Excel (XLSX) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#16A34A">
-    <style> body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; } .fade-in { animation: fadeInAnimation 0.5s ease-in-out forwards; } @keyframes fadeInAnimation { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } .nav-button { transition: all 0.3s ease; } .nav-button.active { background-color: #16A34A; color: white; } .nav-button:not(.active):hover { background-color: #e5e7eb; } .modal-backdrop { background-color: rgba(0,0,0,0.5); } .modal-content { transition: all 0.3s ease-out; } </style>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+        .fade-in { animation: fadeInAnimation 0.5s ease-in-out forwards; }
+        @keyframes fadeInAnimation { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-button { transition: all 0.3s ease; }
+        .nav-button.active { background-color: #16A34A; color: white; }
+        .nav-button:not(.active):hover { background-color: #e5e7eb; }
+        .modal-backdrop { background-color: rgba(0,0,0,0.5); }
+        .modal-content { transition: all 0.3s ease-out; }
+        
+        /* Estilos para validação de senha */
+        .password-requirement { font-size: 0.75rem; margin-top: 0.25rem; }
+        .password-requirement.valid { color: #10b981; }
+        .password-requirement.invalid { color: #ef4444; }
+    </style>
 </head>
 <body class="text-gray-800">
 
     <!-- Tela de Login e Cadastro -->
     <div id="auth-container" class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
         <div class="w-full max-w-md">
-            <div class="flex justify-center mb-6"><svg class="h-16 w-16 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg></div>
+            <div class="flex justify-center mb-6">
+                 <svg class="h-16 w-16 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
+            </div>
             <div id="login-view">
                 <form id="login-form" class="bg-white p-8 rounded-xl shadow-lg">
                     <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Login</h2>
-                    <div class="mb-4"><label for="login-email" class="block text-sm font-medium text-gray-600">Email</label><input type="email" id="login-email" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md"></div>
-                    <div class="mb-6"><label for="login-password" class="block text-sm font-medium text-gray-600">Senha</label><input type="password" id="login-password" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md"></div>
-                    <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700">Entrar</button>
-                    <div class="text-center text-sm text-gray-500 mt-4"><a href="#" id="forgot-password-link" class="text-indigo-600 hover:underline">Esqueci minha senha</a><span id="register-link-container" class="hidden"> | <a href="#" id="show-register-link" class="text-green-600 hover:underline">Cadastre-se</a></span></div>
+                    <div class="mb-4"><label for="login-email" class="block text-sm font-medium text-gray-600">Email</label><input type="email" id="login-email" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md focus:ring-green-500 focus:border-green-500"></div>
+                    <div class="mb-6"><label for="login-password" class="block text-sm font-medium text-gray-600">Senha</label><input type="password" id="login-password" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md focus:ring-green-500 focus:border-green-500"></div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">Entrar</button>
+                    <div class="text-center mt-4">
+                        <a href="#" id="forgot-password-link" class="text-sm text-green-600 hover:underline">Esqueci minha senha</a>
+                    </div>
+                    <p id="register-link-container" class="text-center text-sm text-gray-500 mt-4">Não tem uma conta? <a href="#" id="show-register-link" class="text-green-600 hover:underline">Cadastre-se</a></p>
                 </form>
             </div>
             <div id="register-view" class="hidden">
@@ -32,12 +56,37 @@
                     <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Cadastrar Primeiro Administrador</h2>
                     <div class="mb-4"><label for="register-name" class="block text-sm font-medium text-gray-600">Seu Nome</label><input type="text" id="register-name" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md"></div>
                     <div class="mb-4"><label for="register-email" class="block text-sm font-medium text-gray-600">Email</label><input type="email" id="register-email" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md"></div>
-                    <div class="mb-4"><label for="register-password" class="block text-sm font-medium text-gray-600">Senha</label><input type="password" id="register-password" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md" minlength="8" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Deve conter no mínimo 8 caracteres, com pelo menos uma letra maiúscula, uma minúscula e um número."></div>
-                    <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700">Cadastrar</button>
+                    <div class="mb-4">
+                        <label for="register-password" class="block text-sm font-medium text-gray-600">Senha</label>
+                        <input type="password" id="register-password" required class="mt-1 w-full p-3 bg-gray-50 border rounded-md">
+                        <div id="password-requirements" class="mt-2">
+                            <div class="password-requirement invalid" id="req-length">• Mínimo 8 caracteres</div>
+                            <div class="password-requirement invalid" id="req-uppercase">• Pelo menos 1 letra maiúscula</div>
+                            <div class="password-requirement invalid" id="req-lowercase">• Pelo menos 1 letra minúscula</div>
+                            <div class="password-requirement invalid" id="req-number">• Pelo menos 1 número</div>
+                            <div class="password-requirement invalid" id="req-special">• Pelo menos 1 caractere especial (!@#$%^&*)</div>
+                        </div>
+                    </div>
+                    <button type="submit" id="register-submit-btn" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors" disabled>Cadastrar</button>
                     <p class="text-center text-sm text-gray-500 mt-4">Já tem uma conta? <a href="#" id="show-login-link" class="text-green-600 hover:underline">Faça Login</a></p>
                 </form>
             </div>
              <p id="auth-feedback" class="text-center text-sm mt-4 h-4"></p>
+        </div>
+    </div>
+    
+    <!-- Modal Esqueci Senha -->
+    <div id="forgot-password-modal-backdrop" class="modal-backdrop fixed inset-0 z-30 hidden items-center justify-center p-4">
+        <div id="forgot-password-modal" class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all -translate-y-10 opacity-0">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-700">Recuperar Senha</h2>
+                <button id="close-forgot-password-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-800">&times;</button>
+            </div>
+            <form id="forgot-password-form" class="space-y-4">
+                <div><label for="forgot-email" class="block text-sm font-medium text-gray-600">Email</label><input type="email" id="forgot-email" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div>
+                <div class="flex gap-4"><button type="button" id="cancel-forgot-password-btn" class="w-full bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-300">Cancelar</button><button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700">Enviar Link</button></div>
+            </form>
+            <p id="forgot-password-feedback" class="text-sm text-center mt-4 h-4"></p>
         </div>
     </div>
     
@@ -48,7 +97,7 @@
         <footer class="text-center mt-10 pb-4 text-xs text-gray-500"></footer>
     </div>
     
-    <!-- Modais -->
+    <!-- MODAL DE DETALHES/EDIÇÃO/HISTÓRICO -->
     <div id="details-modal-backdrop" class="modal-backdrop fixed inset-0 z-40 hidden items-center justify-center p-4"></div>
 
     <script type="module">
@@ -57,24 +106,66 @@
         import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, serverTimestamp, setDoc, getDoc, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
         
-        const firebaseConfig = { apiKey: "AIzaSyA23XFm_O2ZUJQU_BePuSYwBqv-2tEol08", authDomain: "sra-suas.firebaseapp.com", projectId: "sra-suas", storageBucket: "sra-suas.appspot.com", messagingSenderId: "822160886742", appId: "1:822160886742:web:f7a4400e8e11e1fbabb277" };
+const firebaseConfig = {
+  apiKey: "AIzaSyA23XFm_O2ZUJQU_BePuSYwBqv-2tEol08",
+  authDomain: "sra-suas.firebaseapp.com",
+  projectId: "sra-suas",
+  storageBucket: "sra-suas.firebasestorage.app",
+  messagingSenderId: "822160886742",
+  appId: "1:822160886742:web:f7a4400e8e11e1fbabb277",
+  measurementId: "G-5X706VZFZG"
+};
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const functions = getFunctions(app, 'us-central1');
-
-        let currentUser = null, userProfile = null, allAttendances = [], unsubscribeAttendances = null, unsubscribeUsers = null, allUsers = [];
+        
+        let currentUser = null, userProfile = null, allAttendances = [], allUsers = [], unsubscribeAttendances = null, unsubscribeUsers = null;
         
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app-container');
         const authFeedback = document.getElementById('auth-feedback');
         const registerLinkContainer = document.getElementById('register-link-container');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const forgotPasswordModalBackdrop = document.getElementById('forgot-password-modal-backdrop');
+        
+        // --- Lógica de Validação de Senha ---
+        function validatePassword(password) {
+            return {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /\d/.test(password),
+                special: /[!@#$%^&*]/.test(password)
+            };
+        }
+        function updatePasswordRequirementsUI(password, requirementsDivId, submitBtnId) {
+            const requirements = validatePassword(password);
+            const reqElements = document.getElementById(requirementsDivId).children;
+            const submitBtn = document.getElementById(submitBtnId);
+            
+            Array.from(reqElements).forEach(el => {
+                const reqName = el.id.split('-')[1];
+                el.className = `password-requirement ${requirements[reqName] ? 'valid' : 'invalid'}`;
+            });
 
-        document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); authFeedback.textContent = ''; signInWithEmailAndPassword(auth, e.target['login-email'].value, e.target['login-password'].value).catch(err => { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Email ou senha inválidos."; }); });
-        document.getElementById('register-form').addEventListener('submit', async (e) => { e.preventDefault(); authFeedback.textContent = ''; const { name, email, password } = Object.fromEntries(new FormData(e.target)); try { const cred = await createUserWithEmailAndPassword(auth, email, password); await setDoc(doc(db, "users", cred.user.uid), { name, email, role: 'admin', createdAt: serverTimestamp(), disabled: false }); } catch (err) { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Erro ao cadastrar: " + err.message; } });
+            const allValid = Object.values(requirements).every(val => val);
+            submitBtn.disabled = !allValid;
+        }
+        document.getElementById('register-password').addEventListener('input', (e) => updatePasswordRequirementsUI(e.target.value, 'password-requirements', 'register-submit-btn'));
+
+        // --- Lógica de Autenticação ---
+        document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); authFeedback.textContent = ''; signInWithEmailAndPassword(auth, e.target['login-email'].value, e.target['login-password'].value).catch(err => { authFeedback.className = 'text-red-500 text-sm'; authFeedback.textContent = "Email ou senha inválidos."; }); });
+        document.getElementById('register-form').addEventListener('submit', async (e) => { e.preventDefault(); authFeedback.textContent = ''; const { name, email, password } = Object.fromEntries(new FormData(e.target)); try { const cred = await createUserWithEmailAndPassword(auth, email, password); await setDoc(doc(db, "users", cred.user.uid), { name, email, role: 'admin', createdAt: serverTimestamp(), disabled: false }); } catch (err) { authFeedback.className = 'text-red-500 text-sm'; authFeedback.textContent = "Erro ao cadastrar: " + err.message; } });
         document.getElementById('show-register-link').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('login-view').classList.add('hidden'); document.getElementById('register-view').classList.remove('hidden'); });
         document.getElementById('show-login-link').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('register-view').classList.add('hidden'); document.getElementById('login-view').classList.remove('hidden'); });
-        document.getElementById('forgot-password-link').addEventListener('click', (e) => { e.preventDefault(); const email = prompt("Por favor, digite seu email para redefinir a senha:"); if (email) { sendPasswordResetEmail(auth, email).then(() => { authFeedback.className = 'text-green-600 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Email de redefinição enviado!"; }).catch(err => { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Erro ao enviar email."; }); } });
+        
+        forgotPasswordLink.addEventListener('click', (e) => { e.preventDefault(); forgotPasswordModalBackdrop.classList.remove('hidden'); forgotPasswordModalBackdrop.classList.add('flex'); setTimeout(() => { forgotPasswordModalBackdrop.querySelector('.modal-content').classList.remove('-translate-y-10', 'opacity-0'); }, 10); });
+        function closeForgotPasswordModal() { const modal = forgotPasswordModalBackdrop.querySelector('.modal-content'); modal.classList.add('-translate-y-10', 'opacity-0'); setTimeout(() => { forgotPasswordModalBackdrop.classList.add('hidden'); forgotPasswordModalBackdrop.classList.remove('flex'); }, 300); }
+        document.getElementById('close-forgot-password-btn').addEventListener('click', closeForgotPasswordModal);
+        document.getElementById('cancel-forgot-password-btn').addEventListener('click', closeForgotPasswordModal);
+        document.getElementById('forgot-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const email = e.target['forgot-email'].value; const feedbackEl = document.getElementById('forgot-password-feedback'); try { await sendPasswordResetEmail(auth, email); feedbackEl.className = 'text-green-600 text-sm'; feedbackEl.textContent = 'Link de recuperação enviado!'; setTimeout(() => { closeForgotPasswordModal(); e.target.reset(); feedbackEl.textContent = ''; }, 3000); } catch (error) { feedbackEl.className = 'text-red-500 text-sm'; feedbackEl.textContent = 'Erro ao enviar email. Verifique o endereço.'; } });
 
         async function checkAdminExists() { const adminQuery = query(collection(db, "users"), where("role", "==", "admin")); const snapshot = await getDocs(adminQuery); registerLinkContainer.style.display = snapshot.empty ? 'inline' : 'none'; }
         
@@ -82,9 +173,7 @@
             if (user) {
                 currentUser = user;
                 await fetchUserProfile(user.uid);
-                if (userProfile && userProfile.disabled) {
-                    authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = 'Sua conta está desativada. Contate o administrador.'; await signOut(auth); return;
-                }
+                if (userProfile?.disabled) { authFeedback.className = 'text-red-500 text-sm'; authFeedback.textContent = 'Sua conta está desativada.'; await signOut(auth); return; }
                 authContainer.classList.add('hidden'); appContainer.classList.remove('hidden');
                 renderAppLayout(); setupNavigation(); listenForData();
             } else {
@@ -98,7 +187,7 @@
         async function fetchUserProfile(uid) { const docRef = doc(db, "users", uid); const docSnap = await getDoc(docRef); userProfile = docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null; }
 
         function renderAppLayout() {
-            appContainer.querySelector('header').innerHTML = `<div class="container mx-auto px-4 py-3"><div class="flex justify-between items-center"><div class="flex items-center gap-3"><svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg><span class="text-xl font-bold text-gray-700">SUAS App</span></div><nav id="main-nav" class="flex gap-2 bg-gray-200 p-1 rounded-lg"></nav><div><button id="logout-btn" class="text-sm font-semibold text-red-600 hover:text-red-800">Sair</button></div></div></div>`;
+            appContainer.querySelector('header').innerHTML = `<div class="container mx-auto px-4 py-3"><div class="flex justify-between items-center"><div class="flex items-center gap-3"><svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg><span class="text-xl font-bold text-gray-700">SUAS App</span></div><nav id="main-nav" class="flex gap-2 bg-gray-200 p-1 rounded-lg"></nav><div class="flex items-center gap-4"><span class="text-sm text-gray-600">Olá, <span class="font-semibold">${userProfile?.name || ''}</span></span><button id="logout-btn" class="text-sm font-semibold text-red-600 hover:text-red-800">Sair</button></div></div></div>`;
             appContainer.querySelector('main').innerHTML = `<div id="page-novo-atendimento" class="fade-in hidden"></div><div id="page-meus-atendimentos" class="fade-in hidden"></div><div id="page-encaminhados" class="fade-in hidden"></div><div id="page-dashboard" class="fade-in hidden"></div><div id="page-admin" class="fade-in hidden"></div><div id="page-todos-atendimentos" class="fade-in hidden"></div>`;
             appContainer.querySelector('footer').innerHTML = `<p>Usuário: <span class="font-mono">${currentUser.email}</span> | Versão 1.07</p>`;
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
@@ -108,7 +197,7 @@
             const mainNav = document.getElementById('main-nav'); if(!mainNav) return; mainNav.innerHTML = '';
             const rolesVisibility = {'page-novo-atendimento':['admin','user','psychologist','technician','intern'],'page-meus-atendimentos':['admin','user','psychologist','technician','intern'],'page-encaminhados':['admin','user','psychologist','technician','intern'],'page-todos-atendimentos':['admin'],'page-dashboard':['admin'],'page-admin':['admin']};
             const pages = {'page-novo-atendimento':'Novo Atendimento','page-meus-atendimentos':'Meus Atendimentos','page-encaminhados':'Encaminhados','page-todos-atendimentos':'Todos Atendimentos','page-dashboard':'Dashboard','page-admin':'Administração'};
-            const visiblePages = Object.keys(pages).filter(pageId => rolesVisibility[pageId].includes(userProfile?.role));
+            const visiblePages = Object.keys(pages).filter(pageId => rolesVisibility[pageId]?.includes(userProfile?.role));
             visiblePages.forEach((pageId) => {
                 const button = document.createElement('button'); button.textContent = pages[pageId]; button.className = 'nav-button px-3 py-1.5 text-sm font-semibold rounded-md';
                 button.addEventListener('click', () => { mainNav.querySelectorAll('button').forEach(b => b.classList.remove('active')); button.classList.add('active'); Object.keys(pages).forEach(pId => { const el = document.getElementById(pId); if(el) el.classList.add('hidden'); }); document.getElementById(pageId).classList.remove('hidden'); renderAllPages(); });
@@ -257,11 +346,7 @@
                             historico: arrayUnion({ acao: 'Edição', data: serverTimestamp(), autorName: userProfile.name, texto: 'Dados do atendimento foram atualizados.' })
                         };
                         await updateDoc(doc(db, "atendimentos", atendimento.id), updatedData);
-                        const updatedAttendance = {...atendimento, ...updatedData};
-                        const index = allAttendances.findIndex(a => a.id === atendimento.id);
-                        if (index > -1) allAttendances[index] = updatedAttendance;
-                        atendimento = updatedAttendance; // Update local copy for re-render
-                        renderView();
+                        closeDetailsModal();
                     });
                 }
             };
@@ -272,7 +357,7 @@
             modalBackdrop.querySelector('#close-details-modal-btn').addEventListener('click', closeDetailsModal);
         }
         function closeDetailsModal() { const modal = document.getElementById('details-modal-backdrop'); modal.querySelector('.modal-content').classList.add('-translate-y-10', 'opacity-0'); setTimeout(() => { modal.innerHTML = ''; modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300); }
-
+        window.showDetailsModal = showDetailsModal; // Expor globalmente para ser chamada pelo HTML
     </script>
 </body>
 </html>

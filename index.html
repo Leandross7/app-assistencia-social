@@ -49,32 +49,27 @@
     </div>
     
     <!-- Modais -->
-    <div id="history-modal-backdrop" class="modal-backdrop fixed inset-0 z-40 hidden items-center justify-center p-4"></div>
+    <div id="details-modal-backdrop" class="modal-backdrop fixed inset-0 z-40 hidden items-center justify-center p-4"></div>
 
     <script type="module">
-        // Importações do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, serverTimestamp, setDoc, getDoc, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
         
-        // Configuração
         const firebaseConfig = { apiKey: "AIzaSyA23XFm_O2ZUJQU_BePuSYwBqv-2tEol08", authDomain: "sra-suas.firebaseapp.com", projectId: "sra-suas", storageBucket: "sra-suas.appspot.com", messagingSenderId: "822160886742", appId: "1:822160886742:web:f7a4400e8e11e1fbabb277" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const functions = getFunctions(app, 'us-central1');
 
-        // Estado Global
-        let currentUser = null, userProfile = null, allAttendances = [], unsubscribeAttendances = null, unsubscribeUsers = null, monthlyChart = null, servicesChart = null, allUsers = [];
+        let currentUser = null, userProfile = null, allAttendances = [], unsubscribeAttendances = null, unsubscribeUsers = null, allUsers = [];
         
-        // Seletores da UI
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app-container');
         const authFeedback = document.getElementById('auth-feedback');
         const registerLinkContainer = document.getElementById('register-link-container');
 
-        // Lógica de Autenticação
         document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); authFeedback.textContent = ''; signInWithEmailAndPassword(auth, e.target['login-email'].value, e.target['login-password'].value).catch(err => { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Email ou senha inválidos."; }); });
         document.getElementById('register-form').addEventListener('submit', async (e) => { e.preventDefault(); authFeedback.textContent = ''; const { name, email, password } = Object.fromEntries(new FormData(e.target)); try { const cred = await createUserWithEmailAndPassword(auth, email, password); await setDoc(doc(db, "users", cred.user.uid), { name, email, role: 'admin', createdAt: serverTimestamp(), disabled: false }); } catch (err) { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Erro ao cadastrar."; } });
         document.getElementById('show-register-link').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('login-view').classList.add('hidden'); document.getElementById('register-view').classList.remove('hidden'); });
@@ -105,7 +100,7 @@
         function renderAppLayout() {
             appContainer.querySelector('header').innerHTML = `<div class="container mx-auto px-4 py-3"><div class="flex justify-between items-center"><div class="flex items-center gap-3"><svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg><span class="text-xl font-bold text-gray-700">SUAS App</span></div><nav id="main-nav" class="flex gap-2 bg-gray-200 p-1 rounded-lg"></nav><div><button id="logout-btn" class="text-sm font-semibold text-red-600 hover:text-red-800">Sair</button></div></div></div>`;
             appContainer.querySelector('main').innerHTML = `<div id="page-novo-atendimento" class="fade-in hidden"></div><div id="page-meus-atendimentos" class="fade-in hidden"></div><div id="page-encaminhados" class="fade-in hidden"></div><div id="page-dashboard" class="fade-in hidden"></div><div id="page-admin" class="fade-in hidden"></div><div id="page-todos-atendimentos" class="fade-in hidden"></div>`;
-            appContainer.querySelector('footer').innerHTML = `<p>Usuário: <span class="font-mono">${currentUser.email}</span> | Versão 1.06</p>`;
+            appContainer.querySelector('footer').innerHTML = `<p>Usuário: <span class="font-mono">${currentUser.email}</span> | Versão 1.07</p>`;
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
         }
 
@@ -125,10 +120,8 @@
         function listenForData() {
             if (unsubscribeAttendances) unsubscribeAttendances();
             unsubscribeAttendances = onSnapshot(query(collection(db, "atendimentos"), orderBy("dataAtendimento", "desc")), snapshot => { allAttendances = snapshot.docs.map(d => ({id: d.id, ...d.data()})); renderAllPages(); });
-            if (userProfile?.role === 'admin') {
-                if (unsubscribeUsers) unsubscribeUsers();
-                unsubscribeUsers = onSnapshot(query(collection(db, "users"), orderBy("name")), snapshot => { allUsers = snapshot.docs.map(d => ({id: d.id, ...d.data()})); renderAllPages(); });
-            }
+            if (unsubscribeUsers) unsubscribeUsers();
+            unsubscribeUsers = onSnapshot(query(collection(db, "users"), orderBy("name")), snapshot => { allUsers = snapshot.docs.map(d => ({id: d.id, ...d.data()})); renderAllPages(); });
         }
         
         function renderAllPages() {
@@ -149,7 +142,7 @@
         function renderNewAttendancePage(container) {
             container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-lg max-w-lg mx-auto"><h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Novo Atendimento</h2><form id="new-attendance-form" class="space-y-4"><div><label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input name="nomeFamilia" type="text" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div><div><label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input name="dataAtendimento" type="date" id="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div><div><label for="tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select name="tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"><option value="">Selecione...</option><option value="Acompanhamento Familiar">Acompanhamento Familiar</option><option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option><option value="Orientação Jurídica">Orientação Jurídica</option><option value="Apoio Psicológico">Apoio Psicológico</option><option value="Cadastro Único">Cadastro Único</option><option value="Outro">Outro</option></select></div><div><label for="observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea name="observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></textarea></div><button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700">Salvar Atendimento</button></form></div>`;
             document.getElementById('dataAtendimento').valueAsDate = new Date();
-            document.getElementById('new-attendance-form').addEventListener('submit', async (e) => { e.preventDefault(); const formData = new FormData(e.target); const data = Object.fromEntries(formData.entries()); await addDoc(collection(db, "atendimentos"), { ...data, dataAtendimento: new Date(data.dataAtendimento + 'T00:00:00-03:00'), criadoEm: serverTimestamp(), autorId: currentUser.uid, autorEmail: currentUser.email, historico: [{ acao: 'Criação', data: serverTimestamp(), autorEmail: currentUser.email, texto: `Atendimento inicial criado.` }] }); e.target.reset(); document.getElementById('dataAtendimento').valueAsDate = new Date(); alert('Atendimento salvo com sucesso!'); });
+            document.getElementById('new-attendance-form').addEventListener('submit', async (e) => { e.preventDefault(); const formData = new FormData(e.target); const data = Object.fromEntries(formData.entries()); await addDoc(collection(db, "atendimentos"), { ...data, dataAtendimento: new Date(data.dataAtendimento + 'T00:00:00-03:00'), criadoEm: serverTimestamp(), autorId: currentUser.uid, autorEmail: currentUser.email, autorName: userProfile.name, historico: [{ acao: 'Criação', data: serverTimestamp(), autorEmail: currentUser.email, autorName: userProfile.name, texto: `Atendimento inicial criado.` }] }); e.target.reset(); document.getElementById('dataAtendimento').valueAsDate = new Date(); alert('Atendimento salvo com sucesso!'); });
         }
         
         function renderAttendanceListPage(container, attendances, title) {
@@ -159,7 +152,7 @@
             const renderList = (data) => {
                 listContainer.innerHTML = '';
                 if (data.length === 0) { listContainer.innerHTML = `<div class="text-center text-gray-500 p-8 border-2 border-dashed rounded-lg">Nenhum atendimento para exibir.</div>`; return; }
-                data.forEach(at => { if (!at.dataAtendimento?.toDate) return; const dataFormatada = at.dataAtendimento.toDate().toLocaleDateString('pt-BR'); const div = document.createElement('div'); div.className = 'p-4 border rounded-xl shadow-sm bg-gray-50 hover:shadow-md transition-all duration-300 cursor-pointer'; div.innerHTML = `<div><p class="font-bold text-lg text-green-800">${at.nomeFamilia}</p><p class="text-sm text-gray-600"><span class="font-semibold">Serviço:</span> ${at.tipoServico}</p><p class="text-sm text-gray-600"><span class="font-semibold">Data:</span> ${dataFormatada}</p><p class="text-sm text-gray-500 mt-1">Autor: ${at.autorEmail}</p>${at.encaminhadoPara ? `<p class="text-sm text-blue-500 mt-1 font-semibold">Encaminhado para: ${allUsers.find(u => u.id === at.encaminhadoPara)?.name || at.encaminhadoParaEmail}</p>` : ''}</div>`; div.addEventListener('click', () => showHistoryModal(at)); listContainer.appendChild(div); });
+                data.forEach(at => { if (!at.dataAtendimento?.toDate) return; const dataFormatada = at.dataAtendimento.toDate().toLocaleDateString('pt-BR'); const div = document.createElement('div'); div.className = 'p-4 border rounded-xl shadow-sm bg-gray-50 hover:shadow-md transition-all duration-300 cursor-pointer'; div.innerHTML = `<div><p class="font-bold text-lg text-green-800">${at.nomeFamilia}</p><p class="text-sm text-gray-600"><span class="font-semibold">Serviço:</span> ${at.tipoServico}</p><p class="text-sm text-gray-600"><span class="font-semibold">Data:</span> ${dataFormatada}</p><p class="text-sm text-gray-500 mt-1">Autor: ${at.autorName}</p>${at.encaminhadoPara ? `<p class="text-sm text-blue-500 mt-1 font-semibold">Encaminhado para: ${allUsers.find(u => u.id === at.encaminhadoPara)?.name || 'Desconhecido'}</p>` : ''}</div>`; div.addEventListener('click', () => showDetailsModal(at)); listContainer.appendChild(div); });
             };
             searchInput.addEventListener('input', (e) => { const term = e.target.value.toLowerCase(); renderList(attendances.filter(at => at.nomeFamilia.toLowerCase().includes(term))); });
             renderList(attendances);
@@ -177,19 +170,19 @@
                 const startDateEl = document.getElementById('report-start-date'); const endDateEl = document.getElementById('report-end-date'); const service = serviceFilter.value;
                 const filteredData = attendances.filter(at => { if(!at.dataAtendimento?.toDate) return false; const atDate = at.dataAtendimento.toDate(); const isAfterStart = !startDateEl.value || atDate >= new Date(startDateEl.value + 'T00:00:00-03:00'); const isBeforeEnd = !endDateEl.value || atDate <= new Date(endDateEl.value + 'T23:59:59-03:00'); const isCorrectService = service === 'todos' || at.tipoServico === service; return isAfterStart && isBeforeEnd && isCorrectService; });
                 if (filteredData.length === 0) { alert('Nenhum dado encontrado para os filtros selecionados.'); return; }
-                const dataToExport = filteredData.map(at => ({ 'Nome da Família': at.nomeFamilia, 'Data do Atendimento': at.dataAtendimento.toDate().toLocaleDateString('pt-BR'), 'Tipo de Serviço': at.tipoServico, 'Observações': at.observacoes, 'Profissional Autor': at.autorEmail, 'Encaminhado Para': allUsers.find(u => u.id === at.encaminhadoPara)?.name || '' }));
+                const dataToExport = filteredData.map(at => ({ 'Nome da Família': at.nomeFamilia, 'Data do Atendimento': at.dataAtendimento.toDate().toLocaleDateString('pt-BR'), 'Tipo de Serviço': at.tipoServico, 'Observações': at.observacoes, 'Profissional Autor': at.autorName, 'Encaminhado Para': allUsers.find(u => u.id === at.encaminhadoPara)?.name || '' }));
                 const worksheet = XLSX.utils.json_to_sheet(dataToExport); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "Atendimentos"); XLSX.writeFile(workbook, `Relatorio_Atendimentos_${new Date().toISOString().slice(0,10)}.xlsx`);
              });
 
-             if(monthlyChart) monthlyChart.destroy(); if(servicesChart) servicesChart.destroy();
+             let monthlyChart, servicesChart;
              const monthlyCtx = document.getElementById('atendimentosPorMesChart').getContext('2d');
              const servicesCtx = document.getElementById('atendimentosPorServicoChart').getContext('2d');
              if (attendances.length === 0) { container.querySelector('#chart-container-monthly').innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Sem dados para exibir.</div>`; container.querySelector('#chart-container-services').innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Sem dados para exibir.</div>`; return; }
              const monthlyData = attendances.reduce((acc, curr) => { if (!curr.dataAtendimento?.toDate) return acc; const date = curr.dataAtendimento.toDate(); const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; if (!acc[key]) acc[key] = { count: 0, label: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) }; acc[key].count++; return acc; }, {});
              const sortedKeys = Object.keys(monthlyData).sort(); const monthlyLabels = sortedKeys.map(key => monthlyData[key].label); const monthlyCounts = sortedKeys.map(key => monthlyData[key].count);
-             monthlyChart = new Chart(monthlyCtx, { type: 'line', data: { labels: monthlyLabels, datasets: [{ label: 'Nº de Atendimentos', data: monthlyCounts, borderColor: '#16A34A', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } });
+             if(window.monthlyChart) window.monthlyChart.destroy(); window.monthlyChart = new Chart(monthlyCtx, { type: 'line', data: { labels: monthlyLabels, datasets: [{ label: 'Nº de Atendimentos', data: monthlyCounts, borderColor: '#16A34A', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } });
              const servicesData = attendances.reduce((acc, curr) => { acc[curr.tipoServico] = (acc[curr.tipoServico] || 0) + 1; return acc; }, {});
-             servicesChart = new Chart(servicesCtx, { type: 'doughnut', data: { labels: Object.keys(servicesData), datasets: [{ label: 'Tipos de Serviço', data: Object.values(servicesData), backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#6366F1'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+             if(window.servicesChart) window.servicesChart.destroy(); window.servicesChart = new Chart(servicesCtx, { type: 'doughnut', data: { labels: Object.keys(servicesData), datasets: [{ label: 'Tipos de Serviço', data: Object.values(servicesData), backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#6366F1'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
         
         function renderAdminPage(container, users) {
@@ -202,39 +195,80 @@
             container.querySelectorAll('.btn-toggle-user').forEach(btn => btn.addEventListener('click', async (e) => { const userId = e.target.dataset.id; const isDisabled = e.target.dataset.disabled === 'true'; if (confirm(`Tem certeza que deseja ${isDisabled ? 'reativar' : 'desativar'} este usuário?`)) { await updateDoc(doc(db, 'users', userId), { disabled: !isDisabled }); } }));
         }
 
-        function showHistoryModal(atendimento) {
-            const historyModalBackdrop = document.getElementById('history-modal-backdrop');
-            historyModalBackdrop.innerHTML = `<div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl transform transition-all -translate-y-10 opacity-0 max-h-[90vh] flex flex-col"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-700">Histórico: ${atendimento.nomeFamilia}</h2><button id="close-history-modal-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-800">&times;</button></div><div class="overflow-y-auto flex-grow pr-4 space-y-4"></div><div class="mt-6 pt-4 border-t"><h3 class="text-lg font-semibold mb-2">Encaminhar Atendimento</h3><div class="flex items-center gap-2"><select id="referral-select" class="flex-grow p-2 border rounded-md bg-gray-50"></select><button id="referral-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Encaminhar</button></div></div></div>`;
+        function showDetailsModal(atendimento) {
+            const modalBackdrop = document.getElementById('history-modal-backdrop');
+            const canEdit = userProfile.role === 'admin' || userProfile.id === atendimento.autorId;
+            const referralOptions = allUsers.filter(u => u.id !== currentUser.uid && !u.disabled).map(u => `<option value="${u.id}">${u.name} (${u.role})</option>`).join('');
             
-            const historyContainer = historyModalBackdrop.querySelector('.overflow-y-auto');
-            atendimento.historico?.sort((a,b) => b.data.seconds - a.data.seconds).forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'p-3 bg-gray-100 rounded-lg';
-                div.innerHTML = `<p class="font-semibold text-gray-800">${item.acao}</p><p class="text-sm">${item.texto}</p><p class="text-xs text-gray-500 mt-1">${item.data.toDate().toLocaleString('pt-BR')} por ${item.autorEmail}</p>`;
-                historyContainer.appendChild(div);
-            });
+            modalBackdrop.innerHTML = `<div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-3xl transform transition-all opacity-0 max-h-[90vh] flex flex-col"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-700">Detalhes: ${atendimento.nomeFamilia}</h2><button id="close-details-modal-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-800">&times;</button></div><div id="modal-body" class="overflow-y-auto flex-grow pr-4"></div></div>`;
+            const modalBody = modalBackdrop.querySelector('#modal-body');
 
-            const referralSelect = historyModalBackdrop.querySelector('#referral-select');
-            allUsers.filter(u => u.id !== currentUser.uid && !u.disabled).forEach(user => { const opt = document.createElement('option'); opt.value = user.id; opt.textContent = `${user.name} (${user.role})`; referralSelect.add(opt); });
+            const renderView = () => {
+                modalBody.innerHTML = `
+                    <div id="view-mode">
+                        <div class="mb-6 space-y-4">
+                            <div><h3 class="text-sm font-medium text-gray-500">Tipo de Serviço</h3><p class="text-lg text-gray-800">${atendimento.tipoServico}</p></div>
+                            <div><h3 class="text-sm font-medium text-gray-500">Data</h3><p class="text-lg text-gray-800">${atendimento.dataAtendimento.toDate().toLocaleDateString('pt-BR')}</p></div>
+                            <div><h3 class="text-sm font-medium text-gray-500">Observações</h3><p class="text-lg text-gray-800 whitespace-pre-wrap">${atendimento.observacoes || 'Nenhuma'}</p></div>
+                        </div>
+                        <div class="pt-4 border-t"><h3 class="text-lg font-semibold mb-2">Histórico de Movimentações</h3><div id="history-list" class="space-y-3"></div></div>
+                        ${userProfile.role !== 'admin' ? `<div class="mt-6 pt-4 border-t"><h3 class="text-lg font-semibold mb-2">Encaminhar Atendimento</h3><div class="flex items-center gap-2"><select id="referral-select" class="flex-grow p-2 border rounded-md bg-gray-50">${referralOptions}</select><button id="referral-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Encaminhar</button></div></div>` : ''}
+                        ${canEdit ? `<div class="mt-6 pt-4 border-t text-right"><button id="edit-btn" class="bg-yellow-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-yellow-600">Editar</button></div>` : ''}
+                    </div>
+                    <div id="edit-mode" class="hidden">
+                        <form id="details-edit-form" class="space-y-4">
+                            <div><label for="details-nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input type="text" id="details-nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md" value="${atendimento.nomeFamilia}"></div>
+                            <div><label for="details-dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input type="date" id="details-dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md" value="${atendimento.dataAtendimento.toDate().toISOString().split('T')[0]}"></div>
+                            <div><label for="details-tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select id="details-tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></select></div>
+                            <div><label for="details-observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea id="details-observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md">${atendimento.observacoes}</textarea></div>
+                            <div class="flex gap-4"><button type="button" id="cancel-edit-btn" class="w-full bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-300">Cancelar</button><button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700">Salvar Alterações</button></div>
+                        </form>
+                    </div>
+                `;
+                
+                const historyList = modalBody.querySelector('#history-list');
+                atendimento.historico?.sort((a,b) => b.data.seconds - a.data.seconds).forEach(item => { const div = document.createElement('div'); div.className = 'p-3 bg-gray-100 rounded-lg'; div.innerHTML = `<p class="font-semibold text-gray-800">${item.acao}</p><p class="text-sm">${item.texto}</p><p class="text-xs text-gray-500 mt-1">${item.data.toDate().toLocaleString('pt-BR')} por ${item.autorName}</p>`; historyList.appendChild(div); });
+                
+                if(userProfile.role !== 'admin') {
+                    modalBody.querySelector('#referral-btn').addEventListener('click', async () => {
+                        const selectedUserId = modalBody.querySelector('#referral-select').value; if (!selectedUserId) { alert('Selecione um profissional.'); return; }
+                        const selectedUser = allUsers.find(u => u.id === selectedUserId);
+                        const newHistoryEntry = { acao: 'Encaminhamento', data: serverTimestamp(), autorEmail: currentUser.email, autorName: userProfile.name, texto: `Encaminhado para ${selectedUser.name}.` };
+                        await updateDoc(doc(db, "atendimentos", atendimento.id), { encaminhadoPara: selectedUserId, historico: arrayUnion(newHistoryEntry) });
+                        alert('Atendimento encaminhado com sucesso!'); closeDetailsModal();
+                    });
+                }
+                
+                if (canEdit) {
+                    modalBody.querySelector('#edit-btn').addEventListener('click', () => {
+                        modalBody.querySelector('#view-mode').classList.add('hidden'); modalBody.querySelector('#edit-mode').classList.remove('hidden');
+                        const select = modalBody.querySelector('#details-tipoServico');
+                        const options = ["Acompanhamento Familiar", "Entrega de Cesta Básica", "Orientação Jurídica", "Apoio Psicológico", "Cadastro Único", "Outro"];
+                        options.forEach(opt => { const optionEl = document.createElement('option'); optionEl.value = opt; optionEl.textContent = opt; select.appendChild(optionEl); });
+                        select.value = atendimento.tipoServico;
+                    });
+                    modalBody.querySelector('#cancel-edit-btn').addEventListener('click', renderView);
+                    modalBody.querySelector('#details-edit-form').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const updatedData = {
+                            nomeFamilia: modalBody.querySelector('#details-nomeFamilia').value, dataAtendimento: new Date(modalBody.querySelector('#details-dataAtendimento').value + 'T00:00:00-03:00'),
+                            tipoServico: modalBody.querySelector('#details-tipoServico').value, observacoes: modalBody.querySelector('#details-observacoes').value,
+                            historico: arrayUnion({ acao: 'Edição', data: serverTimestamp(), autorEmail: currentUser.email, autorName: userProfile.name, texto: 'Dados do atendimento foram atualizados.' })
+                        };
+                        await updateDoc(doc(db, "atendimentos", atendimento.id), updatedData);
+                        renderView();
+                    });
+                }
+            };
 
-            historyModalBackdrop.querySelector('#referral-btn').addEventListener('click', async () => {
-                const selectedUserId = referralSelect.value;
-                if (!selectedUserId) { alert('Selecione um profissional.'); return; }
-                const selectedUser = allUsers.find(u => u.id === selectedUserId);
-                const newHistoryEntry = { acao: 'Encaminhamento', data: serverTimestamp(), autorEmail: currentUser.email, texto: `Encaminhado para ${selectedUser.name}.` };
-                await updateDoc(doc(db, "atendimentos", atendimento.id), { encaminhadoPara: selectedUserId, encaminhadoParaEmail: selectedUser.email, historico: arrayUnion(newHistoryEntry) });
-                alert('Atendimento encaminhado com sucesso!');
-                closeHistoryModal();
-            });
-
-            historyModalBackdrop.classList.remove('hidden'); historyModalBackdrop.classList.add('flex');
-            setTimeout(() => { historyModalBackdrop.querySelector('.modal-content').classList.remove('-translate-y-10', 'opacity-0'); }, 10);
+            renderView();
+            modalBackdrop.classList.remove('hidden'); modalBackdrop.classList.add('flex');
+            setTimeout(() => { modalBackdrop.querySelector('.modal-content').classList.remove('-translate-y-10', 'opacity-0'); }, 10);
             
-            historyModalBackdrop.querySelector('#close-history-modal-btn').addEventListener('click', closeHistoryModal);
-            historyModalBackdrop.addEventListener('click', e => { if(e.target === historyModalBackdrop) closeHistoryModal(); });
+            modalBackdrop.querySelector('#close-details-modal-btn').addEventListener('click', closeDetailsModal);
+            modalBackdrop.addEventListener('click', e => { if(e.target === modalBackdrop) closeDetailsModal(); });
         }
-        function closeHistoryModal() { const modal = document.getElementById('history-modal-backdrop'); modal.querySelector('.modal-content').classList.add('-translate-y-10', 'opacity-0'); setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300); }
-
+        function closeDetailsModal() { const modal = document.getElementById('history-modal-backdrop'); modal.querySelector('.modal-content').classList.add('-translate-y-10', 'opacity-0'); setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300); }
     </script>
 </body>
 </html>

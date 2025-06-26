@@ -71,7 +71,7 @@
         const registerLinkContainer = document.getElementById('register-link-container');
 
         document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); authFeedback.textContent = ''; signInWithEmailAndPassword(auth, e.target['login-email'].value, e.target['login-password'].value).catch(err => { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Email ou senha inválidos."; }); });
-        document.getElementById('register-form').addEventListener('submit', async (e) => { e.preventDefault(); authFeedback.textContent = ''; const { name, email, password } = Object.fromEntries(new FormData(e.target)); try { const cred = await createUserWithEmailAndPassword(auth, email, password); await setDoc(doc(db, "users", cred.user.uid), { name, email, role: 'admin', createdAt: serverTimestamp(), disabled: false }); } catch (err) { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Erro ao cadastrar."; } });
+        document.getElementById('register-form').addEventListener('submit', async (e) => { e.preventDefault(); authFeedback.textContent = ''; const { name, email, password } = Object.fromEntries(new FormData(e.target)); try { const cred = await createUserWithEmailAndPassword(auth, email, password); await setDoc(doc(db, "users", cred.user.uid), { name, email, role: 'admin', createdAt: serverTimestamp(), disabled: false }); } catch (err) { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Erro ao cadastrar: " + err.message; } });
         document.getElementById('show-register-link').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('login-view').classList.add('hidden'); document.getElementById('register-view').classList.remove('hidden'); });
         document.getElementById('show-login-link').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('register-view').classList.add('hidden'); document.getElementById('login-view').classList.remove('hidden'); });
         document.getElementById('forgot-password-link').addEventListener('click', (e) => { e.preventDefault(); const email = prompt("Por favor, digite seu email para redefinir a senha:"); if (email) { sendPasswordResetEmail(auth, email).then(() => { authFeedback.className = 'text-green-600 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Email de redefinição enviado!"; }).catch(err => { authFeedback.className = 'text-red-500 text-sm text-center mt-4 h-4'; authFeedback.textContent = "Erro ao enviar email."; }); } });
@@ -142,7 +142,7 @@
         function renderNewAttendancePage(container) {
             container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-lg max-w-lg mx-auto"><h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">Novo Atendimento</h2><form id="new-attendance-form" class="space-y-4"><div><label for="nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input name="nomeFamilia" type="text" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div><div><label for="dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input name="dataAtendimento" type="date" id="dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></div><div><label for="tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select name="tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"><option value="">Selecione...</option><option value="Acompanhamento Familiar">Acompanhamento Familiar</option><option value="Entrega de Cesta Básica">Entrega de Cesta Básica</option><option value="Orientação Jurídica">Orientação Jurídica</option><option value="Apoio Psicológico">Apoio Psicológico</option><option value="Cadastro Único">Cadastro Único</option><option value="Outro">Outro</option></select></div><div><label for="observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea name="observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></textarea></div><button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700">Salvar Atendimento</button></form></div>`;
             document.getElementById('dataAtendimento').valueAsDate = new Date();
-            document.getElementById('new-attendance-form').addEventListener('submit', async (e) => { e.preventDefault(); const formData = new FormData(e.target); const data = Object.fromEntries(formData.entries()); await addDoc(collection(db, "atendimentos"), { ...data, dataAtendimento: new Date(data.dataAtendimento + 'T00:00:00-03:00'), criadoEm: serverTimestamp(), autorId: currentUser.uid, autorEmail: currentUser.email, autorName: userProfile.name, historico: [{ acao: 'Criação', data: serverTimestamp(), autorEmail: currentUser.email, autorName: userProfile.name, texto: `Atendimento inicial criado.` }] }); e.target.reset(); document.getElementById('dataAtendimento').valueAsDate = new Date(); alert('Atendimento salvo com sucesso!'); });
+            document.getElementById('new-attendance-form').addEventListener('submit', async (e) => { e.preventDefault(); const formData = new FormData(e.target); const data = Object.fromEntries(formData.entries()); await addDoc(collection(db, "atendimentos"), { ...data, dataAtendimento: new Date(data.dataAtendimento + 'T00:00:00-03:00'), criadoEm: serverTimestamp(), autorId: currentUser.uid, autorName: userProfile.name, historico: [{ acao: 'Criação', data: serverTimestamp(), autorName: userProfile.name, texto: `Atendimento inicial criado.` }] }); e.target.reset(); document.getElementById('dataAtendimento').valueAsDate = new Date(); alert('Atendimento salvo com sucesso!'); });
         }
         
         function renderAttendanceListPage(container, attendances, title) {
@@ -170,19 +170,19 @@
                 const startDateEl = document.getElementById('report-start-date'); const endDateEl = document.getElementById('report-end-date'); const service = serviceFilter.value;
                 const filteredData = attendances.filter(at => { if(!at.dataAtendimento?.toDate) return false; const atDate = at.dataAtendimento.toDate(); const isAfterStart = !startDateEl.value || atDate >= new Date(startDateEl.value + 'T00:00:00-03:00'); const isBeforeEnd = !endDateEl.value || atDate <= new Date(endDateEl.value + 'T23:59:59-03:00'); const isCorrectService = service === 'todos' || at.tipoServico === service; return isAfterStart && isBeforeEnd && isCorrectService; });
                 if (filteredData.length === 0) { alert('Nenhum dado encontrado para os filtros selecionados.'); return; }
-                const dataToExport = filteredData.map(at => ({ 'Nome da Família': at.nomeFamilia, 'Data do Atendimento': at.dataAtendimento.toDate().toLocaleDateString('pt-BR'), 'Tipo de Serviço': at.tipoServico, 'Observações': at.observacoes, 'Profissional Autor': at.autorName, 'Encaminhado Para': allUsers.find(u => u.id === at.encaminhadoPara)?.name || '' }));
+                const dataToExport = filteredData.map(at => ({ 'Nome da Família': at.nomeFamilia, 'Data do Atendimento': at.dataAtendimento.toDate().toLocaleDateString('pt-BR'), 'Tipo de Serviço': at.tipoServico, 'Observações': at.observacoes || '', 'Profissional Autor': at.autorName, 'Encaminhado Para': allUsers.find(u => u.id === at.encaminhadoPara)?.name || '' }));
                 const worksheet = XLSX.utils.json_to_sheet(dataToExport); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "Atendimentos"); XLSX.writeFile(workbook, `Relatorio_Atendimentos_${new Date().toISOString().slice(0,10)}.xlsx`);
              });
 
-             let monthlyChart, servicesChart;
+             if(window.monthlyChart) window.monthlyChart.destroy(); if(window.servicesChart) window.servicesChart.destroy();
              const monthlyCtx = document.getElementById('atendimentosPorMesChart').getContext('2d');
              const servicesCtx = document.getElementById('atendimentosPorServicoChart').getContext('2d');
              if (attendances.length === 0) { container.querySelector('#chart-container-monthly').innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Sem dados para exibir.</div>`; container.querySelector('#chart-container-services').innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Sem dados para exibir.</div>`; return; }
              const monthlyData = attendances.reduce((acc, curr) => { if (!curr.dataAtendimento?.toDate) return acc; const date = curr.dataAtendimento.toDate(); const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; if (!acc[key]) acc[key] = { count: 0, label: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) }; acc[key].count++; return acc; }, {});
              const sortedKeys = Object.keys(monthlyData).sort(); const monthlyLabels = sortedKeys.map(key => monthlyData[key].label); const monthlyCounts = sortedKeys.map(key => monthlyData[key].count);
-             if(window.monthlyChart) window.monthlyChart.destroy(); window.monthlyChart = new Chart(monthlyCtx, { type: 'line', data: { labels: monthlyLabels, datasets: [{ label: 'Nº de Atendimentos', data: monthlyCounts, borderColor: '#16A34A', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } });
+             window.monthlyChart = new Chart(monthlyCtx, { type: 'line', data: { labels: monthlyLabels, datasets: [{ label: 'Nº de Atendimentos', data: monthlyCounts, borderColor: '#16A34A', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } });
              const servicesData = attendances.reduce((acc, curr) => { acc[curr.tipoServico] = (acc[curr.tipoServico] || 0) + 1; return acc; }, {});
-             if(window.servicesChart) window.servicesChart.destroy(); window.servicesChart = new Chart(servicesCtx, { type: 'doughnut', data: { labels: Object.keys(servicesData), datasets: [{ label: 'Tipos de Serviço', data: Object.values(servicesData), backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#6366F1'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+             window.servicesChart = new Chart(servicesCtx, { type: 'doughnut', data: { labels: Object.keys(servicesData), datasets: [{ label: 'Tipos de Serviço', data: Object.values(servicesData), backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#6366F1'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
         
         function renderAdminPage(container, users) {
@@ -196,11 +196,11 @@
         }
 
         function showDetailsModal(atendimento) {
-            const modalBackdrop = document.getElementById('history-modal-backdrop');
+            const modalBackdrop = document.getElementById('details-modal-backdrop');
             const canEdit = userProfile.role === 'admin' || userProfile.id === atendimento.autorId;
             const referralOptions = allUsers.filter(u => u.id !== currentUser.uid && !u.disabled).map(u => `<option value="${u.id}">${u.name} (${u.role})</option>`).join('');
             
-            modalBackdrop.innerHTML = `<div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-3xl transform transition-all opacity-0 max-h-[90vh] flex flex-col"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-700">Detalhes: ${atendimento.nomeFamilia}</h2><button id="close-details-modal-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-800">&times;</button></div><div id="modal-body" class="overflow-y-auto flex-grow pr-4"></div></div>`;
+            modalBackdrop.innerHTML = `<div class="modal-content bg-white p-8 rounded-xl shadow-2xl w-full max-w-3xl transform opacity-0 max-h-[90vh] flex flex-col"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-700">Detalhes: ${atendimento.nomeFamilia}</h2><button id="close-details-modal-btn" class="text-2xl font-bold text-gray-500 hover:text-gray-800">&times;</button></div><div id="modal-body" class="overflow-y-auto flex-grow pr-4"></div></div>`;
             const modalBody = modalBackdrop.querySelector('#modal-body');
 
             const renderView = () => {
@@ -220,7 +220,7 @@
                             <div><label for="details-nomeFamilia" class="block text-sm font-medium text-gray-600">Nome da Família</label><input type="text" id="details-nomeFamilia" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md" value="${atendimento.nomeFamilia}"></div>
                             <div><label for="details-dataAtendimento" class="block text-sm font-medium text-gray-600">Data</label><input type="date" id="details-dataAtendimento" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md" value="${atendimento.dataAtendimento.toDate().toISOString().split('T')[0]}"></div>
                             <div><label for="details-tipoServico" class="block text-sm font-medium text-gray-600">Tipo de Serviço</label><select id="details-tipoServico" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md"></select></div>
-                            <div><label for="details-observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea id="details-observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md">${atendimento.observacoes}</textarea></div>
+                            <div><label for="details-observacoes" class="block text-sm font-medium text-gray-600">Observações</label><textarea id="details-observacoes" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md">${atendimento.observacoes || ''}</textarea></div>
                             <div class="flex gap-4"><button type="button" id="cancel-edit-btn" class="w-full bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-300">Cancelar</button><button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700">Salvar Alterações</button></div>
                         </form>
                     </div>
@@ -229,11 +229,11 @@
                 const historyList = modalBody.querySelector('#history-list');
                 atendimento.historico?.sort((a,b) => b.data.seconds - a.data.seconds).forEach(item => { const div = document.createElement('div'); div.className = 'p-3 bg-gray-100 rounded-lg'; div.innerHTML = `<p class="font-semibold text-gray-800">${item.acao}</p><p class="text-sm">${item.texto}</p><p class="text-xs text-gray-500 mt-1">${item.data.toDate().toLocaleString('pt-BR')} por ${item.autorName}</p>`; historyList.appendChild(div); });
                 
-                if(userProfile.role !== 'admin') {
+                if(userProfile.role !== 'admin' && modalBody.querySelector('#referral-btn')) {
                     modalBody.querySelector('#referral-btn').addEventListener('click', async () => {
                         const selectedUserId = modalBody.querySelector('#referral-select').value; if (!selectedUserId) { alert('Selecione um profissional.'); return; }
                         const selectedUser = allUsers.find(u => u.id === selectedUserId);
-                        const newHistoryEntry = { acao: 'Encaminhamento', data: serverTimestamp(), autorEmail: currentUser.email, autorName: userProfile.name, texto: `Encaminhado para ${selectedUser.name}.` };
+                        const newHistoryEntry = { acao: 'Encaminhamento', data: serverTimestamp(), autorName: userProfile.name, texto: `Encaminhado para ${selectedUser.name}.` };
                         await updateDoc(doc(db, "atendimentos", atendimento.id), { encaminhadoPara: selectedUserId, historico: arrayUnion(newHistoryEntry) });
                         alert('Atendimento encaminhado com sucesso!'); closeDetailsModal();
                     });
@@ -243,6 +243,7 @@
                     modalBody.querySelector('#edit-btn').addEventListener('click', () => {
                         modalBody.querySelector('#view-mode').classList.add('hidden'); modalBody.querySelector('#edit-mode').classList.remove('hidden');
                         const select = modalBody.querySelector('#details-tipoServico');
+                        select.innerHTML = '';
                         const options = ["Acompanhamento Familiar", "Entrega de Cesta Básica", "Orientação Jurídica", "Apoio Psicológico", "Cadastro Único", "Outro"];
                         options.forEach(opt => { const optionEl = document.createElement('option'); optionEl.value = opt; optionEl.textContent = opt; select.appendChild(optionEl); });
                         select.value = atendimento.tipoServico;
@@ -253,22 +254,25 @@
                         const updatedData = {
                             nomeFamilia: modalBody.querySelector('#details-nomeFamilia').value, dataAtendimento: new Date(modalBody.querySelector('#details-dataAtendimento').value + 'T00:00:00-03:00'),
                             tipoServico: modalBody.querySelector('#details-tipoServico').value, observacoes: modalBody.querySelector('#details-observacoes').value,
-                            historico: arrayUnion({ acao: 'Edição', data: serverTimestamp(), autorEmail: currentUser.email, autorName: userProfile.name, texto: 'Dados do atendimento foram atualizados.' })
+                            historico: arrayUnion({ acao: 'Edição', data: serverTimestamp(), autorName: userProfile.name, texto: 'Dados do atendimento foram atualizados.' })
                         };
                         await updateDoc(doc(db, "atendimentos", atendimento.id), updatedData);
+                        const updatedAttendance = {...atendimento, ...updatedData};
+                        const index = allAttendances.findIndex(a => a.id === atendimento.id);
+                        if (index > -1) allAttendances[index] = updatedAttendance;
+                        atendimento = updatedAttendance; // Update local copy for re-render
                         renderView();
                     });
                 }
             };
-
             renderView();
             modalBackdrop.classList.remove('hidden'); modalBackdrop.classList.add('flex');
             setTimeout(() => { modalBackdrop.querySelector('.modal-content').classList.remove('-translate-y-10', 'opacity-0'); }, 10);
             
             modalBackdrop.querySelector('#close-details-modal-btn').addEventListener('click', closeDetailsModal);
-            modalBackdrop.addEventListener('click', e => { if(e.target === modalBackdrop) closeDetailsModal(); });
         }
-        function closeDetailsModal() { const modal = document.getElementById('history-modal-backdrop'); modal.querySelector('.modal-content').classList.add('-translate-y-10', 'opacity-0'); setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300); }
+        function closeDetailsModal() { const modal = document.getElementById('details-modal-backdrop'); modal.querySelector('.modal-content').classList.add('-translate-y-10', 'opacity-0'); setTimeout(() => { modal.innerHTML = ''; modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300); }
+
     </script>
 </body>
 </html>
